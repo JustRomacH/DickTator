@@ -10,6 +10,11 @@ db = DataBase()
 
 
 @bot.command()
+async def info(ctx: commands.Context):
+    await ctx.channel.send(HELP)
+
+
+@bot.command()
 async def dick(ctx: commands.Context):
     user_id = ctx.author.id
     mention = ctx.author.mention
