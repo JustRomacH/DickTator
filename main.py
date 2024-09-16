@@ -23,7 +23,7 @@ async def top(ctx: commands.Context):
     if users:
         answer = "Топ игроков:"
         for i, user in enumerate(users):
-            answer += f"\n{i + 1}. {await bot.fetch_user(user[0])} - {user[1]} см"
+            answer += f"\n{i + 1}. {bot.get_user(user[0]).name.capitalize()} - {user[1]} см"
     else:
         answer = "Похоже топ пустой..."
     await ctx.channel.send(answer)
@@ -31,6 +31,7 @@ async def top(ctx: commands.Context):
 
 @bot.event
 async def on_ready():
+    db.subtractAttempts()
     db.add_attempts()
 
 

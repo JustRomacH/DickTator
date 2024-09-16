@@ -83,7 +83,8 @@ class DataBase:
             return self.change_size(user_id, delta, False, mention, attempts)
         else:
             return f"""{mention}, у тебя не осталось попыток.
-    Сейчас у тебя {user_size} см."""
+Сейчас у тебя {user_size} см.
+Ты занимаешь {self.get_place_in_top(user_id)} место в топе."""
 
     def get_top(self) -> list:
         users = self.cur.execute("SELECT * FROM users ORDER BY size DESC").fetchall()
@@ -94,11 +95,17 @@ class DataBase:
             if user_id == user[0]:
                 return i + 1
 
+    def subtractAttempts(self):
+        for user in self.cur.execute("""SELECT id FROM users""").fetchall():
+            attempts = self.get_value("attempts", "id", user[0])
+            self.update_value("attempts", attempts - 1, "id", user[0])
+
 
 def main():
     db = DataBase()
+    # db.subtractAttempts()
+    db.cur.execute("""DELETE FROM users""")
     # db.cur.execute("""CREATE TABLE users (id integer PRIMARY KEY, size integer, attempts integer)""")
-    # db.cur.execute("""DELETE FROM users""")
 
 
 if __name__ == "__main__":
