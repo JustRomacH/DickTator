@@ -6,8 +6,8 @@ from datetime import datetime, timedelta
 def startCoroutine(func: Callable, start_hour: int = 17) -> None:
     cur_time = datetime.today()
     next_time = cur_time.replace(
-        day=cur_time.day + 1,
-        hour=start_hour,
+        day=cur_time.day,
+        hour=start_hour - 3,
         minute=0,
         second=0,
         microsecond=0
