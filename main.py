@@ -10,7 +10,7 @@ db = DataBase()
 
 
 @bot.command()
-async def inf(ctx: commands.Context):
+async def infa(ctx: commands.Context):
     await ctx.channel.send(HELP)
 
 
