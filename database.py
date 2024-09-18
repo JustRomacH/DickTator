@@ -95,7 +95,7 @@ class DataBase:
             if user_id == user[0]:
                 return i + 1
 
-    def subtractAttempts(self):
+    def subtract_attempts(self):
         for user in self.cur.execute("""SELECT id FROM users""").fetchall():
             attempts = self.get_value("attempts", "id", user[0])
             self.update_value("attempts", attempts - 1, "id", user[0])

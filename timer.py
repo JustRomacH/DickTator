@@ -1,6 +1,16 @@
 from typing import Callable
 from threading import Timer
+from random import randrange
 from datetime import datetime, timedelta
+
+
+def randomTime() -> float:
+    cur_time = datetime.today()
+    rand_hour = randrange(1, 12)
+    rand_min = randrange(0, 60)
+    next_time = cur_time + timedelta(hours=rand_hour, minutes=rand_min)
+    delta_time = (next_time - cur_time).total_seconds()
+    return delta_time
 
 
 def startCoroutine(func: Callable, start_hour: int = 17) -> None:
