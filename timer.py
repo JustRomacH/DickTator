@@ -1,4 +1,3 @@
-from turtledemo.penrose import start
 from typing import Callable
 from threading import Timer
 from random import randrange

@@ -113,7 +113,7 @@ class DataBase:
             for user in self.cur.execute("""SELECT id FROM users""").fetchall():
                 attempts = self.get_value("attempts", "id", user[0])
                 self.update_value("attempts", attempts - 1, "id", user[0])
-                success("Попытки вычтены")
+            success("Попытки вычтены")
         except Exception as ex:
             error(ex)
 
