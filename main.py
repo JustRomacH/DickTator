@@ -91,12 +91,13 @@ async def on_message(message: Message):
 @bot.event
 async def on_presence_update(before: Member, after: Member):
     try:
+        penalty = -3
         text_channel = after.guild.text_channels[0]
         user_id = after.id
         cur_act = after.activity.name.lower()
         if any(ban_act in cur_act for ban_act in BANNED_ACT):
             await text_channel.send(f"{after.mention} {choice(LEAVE_PHRASES)}")
-            answer = db.change_size(user_id, -1, mention=after.mention)
+            answer = db.change_size(user_id, penalty, mention=after.mention)
             await text_channel.send(answer)
     except AttributeError:
         pass
