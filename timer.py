@@ -7,18 +7,18 @@ tz = timezone(timedelta(hours=3))
 
 
 def getTime() -> str:
-    time = datetime.today().replace(tzinfo=tz)
+    time = datetime.today().astimezone(tz)
     return time.strftime("%d-%m %H:%M:%S")
 
 
 def convertTime(secs: float) -> str:
-    time = datetime.today().replace(tzinfo=tz)
+    time = datetime.today().astimezone(tz)
     time += timedelta(seconds=secs)
     return time.strftime("%d-%m %H:%M:%S")
 
 
 def randomTime() -> float:
-    cur_time = datetime.today().replace(tzinfo=tz)
+    cur_time = datetime.today().astimezone(tz)
     rand_hour = randrange(6, 18)
     rand_min = randrange(0, 60)
     next_time = cur_time + timedelta(hours=rand_hour, minutes=rand_min)
@@ -27,7 +27,7 @@ def randomTime() -> float:
 
 
 def startCoroutine(func: Callable, start_hour: int = 17) -> None:
-    cur_time = datetime.today().replace(tzinfo=tz)
+    cur_time = datetime.today().astimezone(tz)
     next_time = cur_time.replace(
         day=cur_time.day,
         hour=start_hour,
@@ -49,7 +49,8 @@ def test():
 
 
 def main():
-    test()
+    # test()
+    print(getTime())
 
 
 if __name__ == "__main__":
