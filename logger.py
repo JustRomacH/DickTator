@@ -1,40 +1,40 @@
+from timer import getTime
 from termcolor import cprint
 
 
 def success(text: str) -> str:
-    response = f"[+] {text}"
+    time = getTime()
+    response = f"[{time}] [+] {text}\n"
     cprint(response, "green")
     return response
 
 
 def error(ex: Exception) -> str:
-    response = f"[-] {ex}"
+    time = getTime()
+    response = f"[{time}] [-] {ex}\n"
     cprint(response, "red")
     return response
 
 
-def info(text: str) -> str:
-    response = f"\n[INFO] {text}"
+def warning(text: str) -> str:
+    time = getTime()
+    response = f"[{time}] [!] {text}\n"
     cprint(response, "yellow")
     return response
 
 
-def specialInfo(text: str) -> str:
-    response = f"\n[INFO] {text}"
+def inf(text: str) -> str:
+    time = getTime()
+    response = f"[{time}] [~] {text}\n"
     cprint(response, "white")
     return response
 
 
 def unimportantInfo(text: str) -> str:
-    response = f"[~] {text}"
+    time = getTime()
+    response = f"[{time}] [~] {text}\n"
     cprint(response, "light_grey")
     return response
-
-
-def unimportant(*texts: str) -> None:
-    for index, text in enumerate(texts):
-        answer = f"{index + 1}. {text}"
-        cprint(answer, "light_grey")
 
 
 def main() -> None:

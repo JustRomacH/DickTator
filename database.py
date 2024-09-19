@@ -1,5 +1,6 @@
 import random
 import sqlite3
+from logger import *
 from timer import startCoroutine
 
 
@@ -44,20 +45,28 @@ class DataBase:
         return bool(req.fetchone()[0])
 
     def add_user(self, user_id: int) -> None:
-        self.cur.execute(f"""INSERT INTO users VALUES ({user_id}, 0, 1)""")
+        try:
+            self.cur.execute(f"""INSERT INTO users VALUES ({user_id}, 0, 1)""")
+            inf("Пользователь добавлен")
+        except Exception as ex:
+            error(ex)
 
-    def add_attempts(self):
-        conn = sqlite3.connect("dicktator.db")
-        conn.autocommit = True
-        cur = conn.cursor()
-        users = cur.execute("""SELECT * FROM users""").fetchall()
-        if users:
-            for user in users:
-                attempts = cur.execute(f"SELECT attempts FROM users WHERE id = {user[0]}").fetchone()[0]
-                cur.execute(f"UPDATE users SET 'attempts' = {attempts + 1} WHERE id = {user[0]}")
-        cur.close()
-        conn.close()
-        startCoroutine(self.add_attempts)
+    def add_attempts(self) -> None:
+        try:
+            conn = sqlite3.connect("dicktator.db")
+            conn.autocommit = True
+            cur = conn.cursor()
+            users = cur.execute("""SELECT * FROM users""").fetchall()
+            if users:
+                for user in users:
+                    attempts = cur.execute(f"SELECT attempts FROM users WHERE id = {user[0]}").fetchone()[0]
+                    cur.execute(f"UPDATE users SET 'attempts' = {attempts + 1} WHERE id = {user[0]}")
+            cur.close()
+            conn.close()
+            success("Попытки добавлены")
+            startCoroutine(self.add_attempts)
+        except Exception as ex:
+            error(ex)
 
     def change_size(self, user_id: int, delta: int, is_penalty: bool = True, mention="User", attempts: int = 0) -> str:
         if not self.is_user_exist(user_id):
@@ -87,7 +96,11 @@ class DataBase:
 Ты занимаешь {self.get_place_in_top(user_id)} место в топе."""
 
     def get_top(self) -> list:
-        users = self.cur.execute("SELECT * FROM users ORDER BY size DESC").fetchall()
+        try:
+            users = self.cur.execute("SELECT * FROM users ORDER BY size DESC").fetchall()
+        except Exception as ex:
+            users = []
+            error(ex)
         return users
 
     def get_place_in_top(self, user_id: int) -> int:
@@ -96,9 +109,13 @@ class DataBase:
                 return i + 1
 
     def subtract_attempts(self):
-        for user in self.cur.execute("""SELECT id FROM users""").fetchall():
-            attempts = self.get_value("attempts", "id", user[0])
-            self.update_value("attempts", attempts - 1, "id", user[0])
+        try:
+            for user in self.cur.execute("""SELECT id FROM users""").fetchall():
+                attempts = self.get_value("attempts", "id", user[0])
+                self.update_value("attempts", attempts - 1, "id", user[0])
+                success("Попытки вычтены")
+        except Exception as ex:
+            error(ex)
 
 
 def main():

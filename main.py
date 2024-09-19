@@ -2,8 +2,8 @@ import timer
 import asyncio
 from config import *
 from database import *
-from logger import error
 from random import choice
+from timer import convertTime
 from discord.ext import commands
 from discord import Intents, Member, Message, RawReactionActionEvent
 
@@ -13,6 +13,7 @@ db = DataBase()
 
 @bot.event
 async def on_ready():
+    success("Бот запущен...")
     db.subtract_attempts()
     db.add_attempts()
     await send_gena()
@@ -51,14 +52,16 @@ async def stats(ctx: commands.Context):
         for i, user in enumerate(users):
             answer += f"\n{i + 1}. {bot.get_user(user[0]).display_name} - {user[1]} см"
     else:
+        warning("Похоже топ пустой...")
         answer = "Похоже топ пустой..."
     await ctx.channel.send(answer)
 
 
 async def send_gena():
     channel = bot.get_channel(747847558239486085)
-    delta_time = timer.randomTime()
     while True:
+        delta_time = timer.randomTime()
+        inf(f"Гена в {convertTime(delta_time)}")
         await asyncio.sleep(delta_time)
         await channel.send(GENA)
 
@@ -101,4 +104,4 @@ async def on_presence_update(before: Member, after: Member):
         error(ex)
 
 
-bot.run(TOKEN)
+bot.run(TOKEN, log_level=0)
