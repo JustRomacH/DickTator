@@ -1,6 +1,14 @@
 from os import getenv
+from dataclasses import dataclass
 
 TOKEN = getenv("TOKEN")
+
+
+@dataclass
+class BotVars:
+    auto_mode = False
+    last_user: int
+
 
 BANNED_ACT = (
     "stalcraft",
@@ -38,7 +46,25 @@ FURRY_GIFS = (
     "https://media1.tenor.com/m/k0Gd9hRepxIAAAAC/felix-felix-argyle.gif",
     "https://media1.tenor.com/m/Pmpev0kM7cAAAAAd/bubble-chat.gif",
     "https://media1.tenor.com/m/68DCMWIgtoQAAAAC/speech-bubble-spoofity.gif",
-    "https://media1.tenor.com/m/eZmpodNvgM0AAAAd/kotodama-honoka-ichinose.gif"
+    "https://media1.tenor.com/m/eZmpodNvgM0AAAAd/kotodama-honoka-ichinose.gif",
+    "https://media1.tenor.com/m/kxGEDdoj_V8AAAAC/speech-bubble.gif",
+    "https://media.tenor.com/yc5c_g6nqSQAAAAi/speech-bubble.gif",
+    "https://media.tenor.com/wf658iKnCb4AAAAi/boykisser-speech-bubble.gif",
+    "https://media1.tenor.com/m/aD2ZpPn0cRoAAAAd/lil-nas-x-nickb.gif",
+    "https://media.tenor.com/BQg6GSZlc2cAAAAi/speech-bubble-boykisser.gif",
+    "https://media.tenor.com/YriUpNFGHrwAAAAi/british-speech-bubble-union-jack-speech-bubble.gif",
+    "https://media1.tenor.com/m/T_aCl5WZuCUAAAAd/typh-speech-bubble.gif",
+    "https://media.tenor.com/Ey5SH20te_sAAAAi/astolfo-astolfo-cry.gif",
+    "https://media.tenor.com/1t7kwTWdRZwAAAAi/speech-bubble.gif",
+    "https://media1.tenor.com/m/pPd2u3Q-5_UAAAAC/dentedhead-speech-bubble.gif",
+    "https://media.tenor.com/x3rEyRVF5foAAAAi/femboy.gif",
+    "https://media1.tenor.com/m/F7XO6oCD6OYAAAAC/bubble-speech.gif",
+    "https://media1.tenor.com/m/38lg308nWwAAAAAd/astolfo.gif",
+    "https://media.tenor.com/mvlqHDBxTGIAAAAi/speech-bubble-sticker.gif",
+    "https://media.tenor.com/4uoycZ1iHT4AAAAi/sigma-sigma-male.gif",
+    "https://media1.tenor.com/m/A9NyR7aOC0AAAAAC/boy-kisser.gif",
+    "https://media.tenor.com/J4Vqv0tnx9EAAAAi/boykisser-speechbubble.gif",
+    "https://media.discordapp.net/attachments/1246098340320383026/1246101514217459773/9012542136709979816.gif?ex=66ed8078&is=66ec2ef8&hm=dfc0e0d9d6925d300331ee64cef24e8512303a8738c0a413287cbc1e66e484ea&="
 )
 
 EMOJIS = (
@@ -62,6 +88,10 @@ HELP = """Каждый день в 17:00 всем выдаётся
 !dick - изменяет размер писюна
 !stats - выводит глобальный топ игроков
 !stalcraft - скидывает лицо из сталкрафта
+!auto on/off - включает режим автоматической
+ответки на гифки и картинки (выключить может 
+только тот, кто включил или сам отключается
+через 30 минут)
 !furry - скидывает furry talking гифку
 (также срабатывает если поставить на любое
 сообщение '❎', '❌' или '✖️')

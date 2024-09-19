@@ -3,7 +3,7 @@ import asyncio
 from config import *
 from database import *
 from random import choice
-from timer import convertTime
+from threading import Timer
 from discord.ext import commands
 from discord import Intents, Member, Message, RawReactionActionEvent
 
@@ -17,6 +17,53 @@ async def on_ready():
     db.subtract_attempts()
     db.add_attempts()
     await send_gena()
+
+
+@bot.command()
+async def auto(ctx: commands.Context, *args):
+    try:
+        user_id = ctx.author.id
+        if BotVars.auto_mode and args[0] == "off":
+            if BotVars.last_user == user_id:
+                BotVars.auto_mode = False
+                answer = "Режим AUTO GIF выключен"
+                inf(answer)
+            else:
+                user_name = bot.get_user(BotVars.last_user).display_name
+                answer = f"""Выключить AUTO GIF сейчас может только {user_name}"""
+        else:
+            match args[0]:
+                case "on":
+                    BotVars.auto_mode = True
+                    answer = "Режим AUTO GIF включен"
+                    BotVars.last_user = user_id
+                    inf(answer)
+                    time = 30 * 60
+                    Timer(time, disable_auto_mode).start()
+                case "off":
+                    answer = "Режим AUTO GIF и так выключен"
+                case _:
+                    answer = "Неверный аргумент..."
+        await ctx.channel.send(answer)
+    except IndexError:
+        pass
+    except Exception as ex:
+        error(ex)
+
+
+def is_gif(content: str):
+    attrs = ("tenor", "gif")
+    if any(attr in content for attr in attrs):
+        return True
+    else:
+        return False
+
+
+def disable_auto_mode() -> None:
+    if BotVars.auto_mode:
+        BotVars.auto_mode = False
+        BotVars.last_user = int()
+        inf("Режим AUTO GIF был автоматически выключен")
 
 
 @bot.command(aliases=["sc", "face"])
@@ -61,7 +108,7 @@ async def send_gena():
     channel = bot.get_channel(747847558239486085)
     while True:
         delta_time = timer.randomTime()
-        inf(f"Гена в {convertTime(delta_time)}")
+        inf(f"Гена в {timer.convertTime(delta_time)}")
         await asyncio.sleep(delta_time)
         await channel.send(GENA)
 
@@ -83,8 +130,12 @@ async def on_raw_reaction_add(payload: RawReactionActionEvent):
 @bot.event
 async def on_message(message: Message):
     if not message.author.bot:
-        if STALCRAFT_FACE in message.content:
-            await message.channel.send(STALCRAFT_FACE)
+        content = message.content
+        channel = message.channel
+        if STALCRAFT_FACE in content:
+            await channel.send(STALCRAFT_FACE)
+        elif BotVars.auto_mode and (is_gif(content) or message.attachments):
+            await channel.send(choice(FURRY_GIFS))
     await bot.process_commands(message)
 
 
