@@ -1,3 +1,4 @@
+from logger import inf
 from typing import Callable
 from threading import Timer
 from random import randrange
@@ -26,7 +27,7 @@ def randomTime() -> float:
     return delta_time
 
 
-def startCoroutine(func: Callable, start_hour: int = 17) -> None:
+def start_coroutine(func: Callable, start_hour: int = 17) -> None:
     cur_time = datetime.today().astimezone(tz)
     next_time = cur_time.replace(
         day=cur_time.day,
@@ -45,7 +46,7 @@ def startCoroutine(func: Callable, start_hour: int = 17) -> None:
 
 def test():
     print("test")
-    startCoroutine(test)
+    start_coroutine(test)
 
 
 def main():

@@ -1,7 +1,7 @@
 import random
 import sqlite3
 from logger import *
-from timer import startCoroutine
+from timer import start_coroutine
 
 
 class DataBase:
@@ -64,7 +64,7 @@ class DataBase:
             cur.close()
             conn.close()
             success("Попытки добавлены")
-            startCoroutine(self.add_attempts)
+            start_coroutine(self.add_attempts)
         except Exception as ex:
             error(ex)
 
