@@ -128,9 +128,9 @@ async def attempts(ctx: commands.Context):
 
 def get_ending(num: int | float) -> str:
     if num == 1:
-        return "а"
+        return "ка"
     elif num in (2, 3, 4):
-        return "и"
+        return "ки"
     else:
         return "ок"
 
