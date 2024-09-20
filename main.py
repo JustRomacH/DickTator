@@ -19,6 +19,15 @@ async def on_ready():
     await send_gena()
 
 
+async def send_gena():
+    channel = bot.get_channel(747847558239486085)
+    while True:
+        delta_time = timer.randomTime()
+        inf(f"Гена в {timer.convertTime(delta_time)}")
+        await asyncio.sleep(delta_time)
+        await channel.send(GENA)
+
+
 @bot.command()
 async def auto(ctx: commands.Context, *args):
     try:
@@ -104,13 +113,26 @@ async def stats(ctx: commands.Context):
     await ctx.channel.send(answer)
 
 
-async def send_gena():
-    channel = bot.get_channel(747847558239486085)
-    while True:
-        delta_time = timer.randomTime()
-        inf(f"Гена в {timer.convertTime(delta_time)}")
-        await asyncio.sleep(delta_time)
-        await channel.send(GENA)
+@bot.command(aliases=["a", "att", "atts", "try", "tries"])
+async def attempts(ctx: commands.Context):
+    try:
+        user_id = ctx.author.id
+        mention = ctx.author.mention
+        atts = db.get_value("attempts", "id", user_id)
+        answer = f"{mention}, у тебя осталось {atts} попыт{get_ending(atts)}"
+        await ctx.channel.send(answer)
+    except Exception as ex:
+        await ctx.channel.send("Что-то пошло не так...")
+        error(ex)
+
+
+def get_ending(num: int | float) -> str:
+    if num == 1:
+        return "а"
+    elif num in (2, 3, 4):
+        return "и"
+    else:
+        return "ок"
 
 
 @bot.event

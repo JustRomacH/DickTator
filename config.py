@@ -86,6 +86,7 @@ HELP = """Каждый день в 17:00 всем выдаётся
 
 Команды:
 !dick - изменяет размер писюна
+!attempts - выводит количество попыток
 !stats - выводит глобальный топ игроков
 !stalcraft - скидывает лицо из сталкрафта
 !auto on/off - включает режим автоматической
@@ -98,6 +99,7 @@ HELP = """Каждый день в 17:00 всем выдаётся
 
 Алиасы:
 !dick - penis, d, p
+!attempts - a, att, atts, try, tries
 !stats - top, stat
 !stalcraft - sc, face
 !furry - f, t, talk, talking"""
