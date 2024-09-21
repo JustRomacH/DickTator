@@ -14,8 +14,7 @@ BANNED_ACT = (
     "stalcraft",
     "dota",
     "unturned",
-    "genshin",
-    "visual"
+    "genshin"
 )
 
 LEAVE_PHRASES = (
