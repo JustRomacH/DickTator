@@ -121,7 +121,12 @@ class DataBase:
 def main():
     db = DataBase()
     # db.subtractAttempts()
-    db.cur.execute("""DELETE FROM users""")
+    # cryspex 459839612668608523
+    # defos 1246094072020603035
+    # romach 1246094142409543773
+    # nollsen 1246094210529103965
+    # jesus 704286738197250128
+    # slava 1250387093604143184
     # db.cur.execute("""CREATE TABLE users (id integer PRIMARY KEY, size integer, attempts integer)""")
 
 
