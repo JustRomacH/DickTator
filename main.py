@@ -56,7 +56,7 @@ class DickTator(commands.Bot):
             await ctx.channel.send(answer)
 
         # Выводит топ игроков
-        @self.command(aliases=["s", "top", "stat"])
+        @self.command(aliases=["s", "t", "top", "stat"])
         async def stats(ctx: commands.Context) -> None:
             users = self.DB.get_top()
             if users:
