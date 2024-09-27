@@ -3,36 +3,31 @@ from termcolor import cprint
 
 
 def success(text: str) -> str:
-    time = getTime()
-    response = f"[{time}] [+] {text}"
+    response = f"[{getTime()}] [+] {text}"
     cprint(response, "green")
     return response
 
 
 def error(ex: Exception) -> str:
-    time = getTime()
-    response = f"[{time}] [-] {ex}"
+    response = f"[{getTime()}] [-] {ex}"
     cprint(response, "red")
     return response
 
 
 def warning(text: str) -> str:
-    time = getTime()
-    response = f"[{time}] [!] {text}"
+    response = f"[{getTime()}] [!] {text}"
     cprint(response, "yellow")
     return response
 
 
 def inf(text: str) -> str:
-    time = getTime()
-    response = f"[{time}] [~] {text}"
+    response = f"[{getTime()}] [~] {text}"
     cprint(response, "white")
     return response
 
 
 def unimportantInfo(text: str) -> str:
-    time = getTime()
-    response = f"[{time}] [~] {text}"
+    response = f"[{getTime()}] [~] {text}"
     cprint(response, "light_grey")
     return response
 
