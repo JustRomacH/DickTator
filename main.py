@@ -31,6 +31,8 @@ class DickTator(commands.Bot):
         self.DB.add_attempts()
         await self.send_gena()
 
+    # КОМАНДЫ
+
     # Добавляет команды
     async def add_commands(self) -> None:
 
@@ -79,6 +81,8 @@ class DickTator(commands.Bot):
                 await ctx.channel.send("Что-то пошло не так...")
                 error(ex)
 
+    # ИВЕНТЫ
+
     # Срабатывает на любое сообщение
     async def on_message(self, message: Message) -> None:
         # Отсеивает сообщения себя и других ботов
@@ -103,6 +107,8 @@ class DickTator(commands.Bot):
             pass
         except Exception as ex:
             error(ex)
+
+    # ФУНКЦИИ
 
     # Скидывает гену с яблоком раз в рандомное время
     async def send_gena(self) -> None:
