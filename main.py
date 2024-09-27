@@ -5,16 +5,8 @@ from logger import *
 from random import choice
 from database import DataBase
 from discord.ext import commands
-from dataclasses import dataclass
 from discord import Intents, Member, Message
-
-
-# Основные переменные бота
-@dataclass
-class BotVars:
-    PENALTY: int = -3
-    GENA_MIN_HOURS: int = 6
-    GENA_MAX_HOURS: int = 18
+from discord.ext.commands import Context, errors
 
 
 class DickTator(commands.Bot):
@@ -107,6 +99,15 @@ class DickTator(commands.Bot):
             pass
         except Exception as ex:
             error(ex)
+
+    # Отлавливает ошибки команд
+    async def on_command_error(self, context: Context, exception: errors.CommandError) -> None:
+        if isinstance(exception, errors.CommandNotFound):
+            await context.channel.send(
+                f"{context.author.mention}, такой команды не существует..."
+            )
+        else:
+            error(exception)
 
     # ФУНКЦИИ
 
