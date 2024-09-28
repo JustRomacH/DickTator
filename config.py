@@ -60,4 +60,4 @@ class ConfigVars:
 !attempts - a, att, atts, try, tries
 !stats - s, t, stat, top
 !stalcraft - sc, face
-!gosdolf - gd, us, nd, usa, dolg, debt"""
+!gosdolg - gd, us, nd, usa, dolg, debt"""
