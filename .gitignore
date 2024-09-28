@@ -1,3 +1,4 @@
 dicktator.db
 .venv
 .idea
+__pycache__
