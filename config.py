@@ -55,3 +55,4 @@ class ConfigVars:
 !attempts - a, att, atts, try, tries
 !stats - s, t, stat, top
 !stalcraft - sc, face"""
+
