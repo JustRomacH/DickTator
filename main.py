@@ -1,9 +1,7 @@
-import timer
-import asyncio
-from config import *
 from logger import *
 from random import choice
 from database import DataBase
+from config import ConfigVars
 from discord.ext import commands
 from discord import Intents, Member, Message
 from discord.ext.commands import Context, errors
@@ -13,15 +11,12 @@ class DickTator(commands.Bot):
     def __init__(self, command_prefix="!", intents=Intents.all()):
         super().__init__(command_prefix, intents=intents)
         self.DB = DataBase()
-        self.BULL_TEXT = self.get_channel(747847558239486085)
 
     # Срабатывает при запуске бота
     async def on_ready(self):
         success("Бот запущен...")
         await self.add_commands()
-        self.DB.subtract_attempts()
-        self.DB.add_attempts()
-        await self.send_gena()
+        await self.DB.add_attempts()
 
     # КОМАНДЫ
 
@@ -31,20 +26,21 @@ class DickTator(commands.Bot):
         # Выводит информацию о боте
         @self.command(aliases=["inf", "i", "h", "info"])
         async def infa(ctx: commands.Context):
-            await ctx.channel.send(HELP)
+            await ctx.channel.send(ConfigVars.HELP)
 
         # Скидывает лицо из Stalcraft
         @self.command(aliases=["sc", "face"])
         async def stalcraft(ctx: commands.Context) -> None:
             await ctx.message.delete()
-            await ctx.channel.send(STALCRAFT_FACE)
+            await ctx.channel.send(ConfigVars.STALCRAFT_FACE)
 
         # Изменяет размер писюна на рандомное значение
         @self.command(aliases=["d", "p", "penis"])
         async def dick(ctx: commands.Context) -> None:
             user_id = ctx.author.id
             mention = ctx.author.mention
-            answer = self.DB.dick_db(user_id, mention)
+            print(user_id, mention)
+            answer = self.DB.dick_random(user_id, mention)
             await ctx.channel.send(answer)
 
         # Выводит топ игроков
@@ -66,9 +62,7 @@ class DickTator(commands.Bot):
             try:
                 user_id = ctx.author.id
                 mention = ctx.author.mention
-                atts = self.DB.get_value("attempts", user_id)
-                answer = f"{mention}, у тебя осталось {atts} {self.get_atts_ending(atts)}"
-                await ctx.channel.send(answer)
+                await ctx.channel.send(self.DB.get_attempts(user_id, mention))
             except Exception as ex:
                 await ctx.channel.send("Что-то пошло не так...")
                 error(ex)
@@ -81,20 +75,22 @@ class DickTator(commands.Bot):
         if not message.author.bot:
             channel = message.channel
             # Отвечает лицом на лицо
-            if STALCRAFT_FACE in message.content:
-                await channel.send(STALCRAFT_FACE)
+            if ConfigVars.STALCRAFT_FACE in message.content:
+                await channel.send(ConfigVars.STALCRAFT_FACE)
         await self.process_commands(message)
 
     # Срабатывает при обновлении активности
-    async def on_presence_update(self, after: Member) -> None:
+    async def on_presence_update(self, before: Member, after: Member) -> None:
         try:
             user_id = after.id
             cur_act = after.activity.name.lower()
+            channel = after.guild.text_channels[0]
             # Если у юзера запрещённая активность
-            if any(ban_act in cur_act for ban_act in BANNED_ACT):
-                await self.BULL_TEXT.send(f"{after.mention} {choice(LEAVE_PHRASES)}")
-                answer = self.DB.change_size(user_id, BotVars.PENALTY, mention=after.mention)
-                await self.BULL_TEXT.send(answer)
+            if any(ban_act in cur_act for ban_act in ConfigVars.BANNED_ACT):
+                self.DB.add_user_if_not_exist(user_id)
+                await channel.send(f"{after.mention} {choice(ConfigVars.LEAVE_PHRASES)}")
+                answer = self.DB.change_dick_size(user_id, after.mention, ConfigVars.PENALTY)
+                await channel.send(answer)
         except AttributeError:
             pass
         except Exception as ex:
@@ -111,14 +107,6 @@ class DickTator(commands.Bot):
 
     # ФУНКЦИИ
 
-    # Скидывает гену с яблоком раз в рандомное время
-    async def send_gena(self) -> None:
-        while True:
-            delta_time = timer.randomTime(BotVars.GENA_MIN_HOURS, BotVars.GENA_MAX_HOURS)
-            inf(f"Гена в {timer.convertTime(delta_time)}")
-            await asyncio.sleep(delta_time)
-            await self.BULL_TEXT.send(GENA)
-
     @staticmethod
     # Проверяет, есть ли GIF в сообщении
     def is_gif(content: str) -> bool:
@@ -128,20 +116,10 @@ class DickTator(commands.Bot):
         else:
             return False
 
-    @staticmethod
-    # Возвращает "попытка" с правильным окончанием
-    def get_atts_ending(num: int | float) -> str:
-        if num == 1:
-            return "попытка"
-        elif num in (2, 3, 4):
-            return "попытки"
-        else:
-            return "попыток"
-
 
 def main() -> None:
     bot = DickTator()
-    bot.run(TOKEN, log_level=0)
+    bot.run(ConfigVars.TOKEN, log_level=0)
 
 
 if __name__ == "__main__":
