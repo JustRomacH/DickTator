@@ -1,5 +1,6 @@
 import sqlite3
 import asyncio
+from git import Repo
 from logger import *
 from random import randint
 from config import ConfigVars
@@ -36,12 +37,14 @@ class DataBase:
     # Изменяет выбранное значение у юзера
     def update_value(self, value: str, new_value: int, user_id: int) -> None:
         self.cur.execute(f"""UPDATE users SET {value} = {new_value} WHERE id = {user_id}""")
+        self.git_push_db()
 
     # Добавляет юзера в БД
     def add_user(self, user_id: int) -> None:
         try:
             self.cur.execute(f"""INSERT INTO users VALUES ({user_id}, 0, 1)""")
             inf("Пользователь добавлен")
+            self.git_push_db()
         except Exception as ex:
             error(ex)
 
@@ -64,6 +67,7 @@ class DataBase:
         else:
             new_size = user_size + delta
         self.update_value("size", new_size, user_id)
+        self.git_push_db()
         return self.get_dick_answer(user_id, mention, delta, is_penalty)
 
     # Изменяет размер писюна на случайное число см
@@ -132,6 +136,15 @@ class DataBase:
             if user_id in user_inf:
                 return i + 1
 
+    # ФУНКЦИИ GIT
+    @staticmethod
+    def git_push_db() -> None:
+        repo = Repo(ConfigVars.GIT_REPO)
+        repo.index.add(["dicktator.db"])
+        repo.index.commit("database updated")
+        origin = repo.remote()
+        origin.push()
+
     # ДРУГИЕ ФУНКЦИИ
 
     # Добавляет 1 попытку всем юзерам каждый день
@@ -147,6 +160,7 @@ class DataBase:
                         attempts = self.get_user_value("attempts", user[0])
                         self.cur.execute(f"UPDATE users SET 'attempts' = {attempts + 1} WHERE id = {user[0]}")
                 success("Попытки добавлены")
+                self.git_push_db()
         except Exception as ex:
             error(ex)
 
