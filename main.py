@@ -1,7 +1,9 @@
+import requests
 from logger import *
 from random import choice
-from database import DataBase
+from bs4 import BeautifulSoup
 from config import ConfigVars
+from database import DataBase
 from discord.ext import commands
 from discord import Intents, Member, Message
 from discord.ext.commands import Context, errors
@@ -64,6 +66,22 @@ class DickTator(commands.Bot):
                 await ctx.channel.send(self.DB.get_attempts(user_id, mention))
             except Exception as ex:
                 await ctx.channel.send("Что-то пошло не так...")
+                error(ex)
+
+        @self.command(aliases=["gd", "nd", "usa", "us", "dolg", "debt"])
+        async def gosdolg(ctx: commands.Context) -> None:
+            try:
+                req = requests.get(ConfigVars.US_DEBT_URL).content
+                html = BeautifulSoup(req, "html.parser")
+                div = html.find("div", {"class": "debt-gross"})
+                debt = div.find("a").text
+                await ctx.channel.send(
+                    f"Госдолг США составляет {debt}"
+                )
+                await ctx.channel.send(ConfigVars.US_DEBT_GIF)
+            except AttributeError:
+                await ctx.channel.send("Произошла ошибка...")
+            except Exception as ex:
                 error(ex)
 
     # ИВЕНТЫ
