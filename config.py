@@ -15,7 +15,7 @@ class ConfigVars:
     GENA_MIN_HOURS: int = 6
     GENA_MAX_HOURS: int = 18
     TIMEZONE: timezone = timezone(timedelta(hours=3))
-    STALCRAFT_FACE = "https://media1.tenor.com/m/LcRHIcFkyvgAAAAd/stalcraft-%D1%81%D0%BD%D1%8E%D1%81.gif"
+    STALCRAFT_FACE = "https://tenor.com/view/stalcraft-%D1%81%D0%BD%D1%8E%D1%81-minecraft-gif-19986730"
     GIT_REPO: str = f"{Path(__file__).parent.resolve()}\\.git"
 
     BANNED_ACT: tuple[str] = (
