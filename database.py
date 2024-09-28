@@ -37,7 +37,6 @@ class DataBase:
     # Изменяет выбранное значение у юзера
     def update_value(self, value: str, new_value: int, user_id: int) -> None:
         self.cur.execute(f"""UPDATE users SET {value} = {new_value} WHERE id = {user_id}""")
-        self.git_push_db()
 
     # Добавляет юзера в БД
     def add_user(self, user_id: int) -> None:
