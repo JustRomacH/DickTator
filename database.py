@@ -100,9 +100,9 @@ class DataBase:
         if not is_penalty:
             match attempts:
                 case 0:
-                    f"\nУ тебя не осталось попыток"
+                    answer += f"\nУ тебя не осталось попыток"
                 case 1:
-                    f"\nУ тебя осталась 1 попытка"
+                    answer += f"\nУ тебя осталась 1 попытка"
                 case _:
                     answer += f"\nУ тебя осталось {attempts} {self.get_atts_ending(attempts)}"
         return answer
