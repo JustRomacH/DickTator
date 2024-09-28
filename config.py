@@ -53,9 +53,11 @@ class ConfigVars:
 !attempts - выводит количество попыток
 !stats - выводит глобальный топ игроков
 !stalcraft - скидывает лицо из Stalcraft
+!gosdolg - скидывает госдолг США
 
 Алиасы:
 !dick - penis, d, p
 !attempts - a, att, atts, try, tries
 !stats - s, t, stat, top
-!stalcraft - sc, face"""
+!stalcraft - sc, face
+!gosdolf - gd, us, nd, usa, dolg, debt"""
