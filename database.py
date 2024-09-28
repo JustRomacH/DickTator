@@ -49,9 +49,7 @@ class DataBase:
     def add_user_if_not_exist(self, user_id: int) -> None:
         try:
             req = self.cur.execute(f"""SELECT EXISTS(SELECT 1 FROM users WHERE id={user_id})""")
-            print("is user")
             if not bool(req.fetchone()[0]):
-                print("add user")
                 self.add_user(user_id)
         except Exception as ex:
             error(ex)

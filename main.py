@@ -39,7 +39,6 @@ class DickTator(commands.Bot):
         async def dick(ctx: commands.Context) -> None:
             user_id = ctx.author.id
             mention = ctx.author.mention
-            print(user_id, mention)
             answer = self.DB.dick_random(user_id, mention)
             await ctx.channel.send(answer)
 
