@@ -111,6 +111,7 @@ class DataBase:
 
     # Возвращает количество оставшихся попыток у юзера
     def get_attempts(self, user_id: int, mention: str) -> str:
+        self.add_user_if_not_exist(user_id)
         atts = self.get_user_value("attempts", user_id)
         answer = f"{mention}, у тебя осталось {atts} {self.get_atts_ending(atts)}"
         return answer
