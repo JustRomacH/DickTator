@@ -5,17 +5,13 @@ from config import ConfigVars
 from datetime import datetime, timedelta
 
 
+# Возвращает текущее время в виде строки
 def get_time() -> str:
     time = datetime.today().astimezone(ConfigVars.TIMEZONE)
     return time.strftime("%d-%m %H:%M:%S")
 
 
-def convert_time(secs: float) -> str:
-    time = datetime.today().astimezone(ConfigVars.TIMEZONE)
-    time += timedelta(seconds=secs)
-    return time.strftime("%d-%m %H:%M:%S")
-
-
+# Возвращает кол-во секунд до n-ого часа
 def get_time_delta(hour: int) -> float:
     cur_time = datetime.today().astimezone(ConfigVars.TIMEZONE)
     next_time = cur_time.replace(
@@ -32,6 +28,7 @@ def get_time_delta(hour: int) -> float:
     return delta_time
 
 
+# Возвращает кол-во секунд до случайного времени
 def get_random_time_delta(hours_min: int, hours_max: int) -> float:
     cur_time = datetime.today().astimezone(ConfigVars.TIMEZONE)
     rand_hour = randrange(hours_min, hours_max)
@@ -39,11 +36,6 @@ def get_random_time_delta(hours_min: int, hours_max: int) -> float:
     next_time = cur_time + timedelta(hours=rand_hour, minutes=rand_min)
     delta_time = (next_time - cur_time).total_seconds()
     return delta_time
-
-
-def start_coroutine(func: Callable, delta_time: float) -> None:
-    t = Timer(delta_time, func)
-    t.start()
 
 
 def main():
