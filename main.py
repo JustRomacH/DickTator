@@ -68,6 +68,7 @@ class DickTator(commands.Bot):
                 await ctx.channel.send("Что-то пошло не так...")
                 error(ex)
 
+        # Выводит госдолг США
         @self.command(aliases=["gd", "nd", "usa", "us", "dolg", "debt"])
         async def gosdolg(ctx: commands.Context) -> None:
             try:
