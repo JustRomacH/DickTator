@@ -17,6 +17,7 @@ class ConfigVars:
     TIMEZONE: timezone = timezone(timedelta(hours=3))
     GIT_REPO: str = f"{Path(__file__).parent.resolve()}\\.git"
     US_DEBT_URL = "https://www.pgpf.org/national-debt-clock"
+    US_DEBT_GIF = "https://media1.tenor.com/m/inHdJJ90TKEAAAAd/%D0%B4%D0%BE%D0%BB%D0%B3-%D1%81%D1%88%D0%B0.gif"
     STALCRAFT_FACE = "https://tenor.com/view/stalcraft-%D1%81%D0%BD%D1%8E%D1%81-minecraft-gif-19986730"
 
     BANNED_ACT: tuple[str] = (
