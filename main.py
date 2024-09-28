@@ -74,7 +74,7 @@ class DickTator(commands.Bot):
                 req = requests.get(ConfigVars.US_DEBT_URL).content
                 html = BeautifulSoup(req, "html.parser")
                 div = html.find("div", {"class": "debt-gross"})
-                debt = div.find("a").text
+                debt = div.find("span").text
                 await ctx.channel.send(
                     f"Госдолг США составляет {debt}"
                 )
