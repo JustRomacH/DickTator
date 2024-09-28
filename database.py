@@ -1,49 +1,43 @@
-import random
 import sqlite3
+import asyncio
 from logger import *
-from timer import startCoroutine
+from random import randint
+from config import ConfigVars
+from timer import get_time_delta
 
 
 class DataBase:
     def __init__(self):
-        self.conn = sqlite3.connect("dicktator.db")
+        try:
+            self.conn = sqlite3.connect("dicktator.db")
+            success("База данных подключена...")
+        except Exception as ex:
+            error(ex)
         self.conn.autocommit = True
         self.cur = self.conn.cursor()
 
-    def get_dick_answer(self, user_id: int, mention, delta: int, user_size: int, is_penalty: bool,
-                        attempts: int = 0) -> str:
-        if not is_penalty:
-            if delta > 0:
-                return f"""{mention}, твой писюн вырос на {delta} см.
-Теперь он равен {user_size} см.
-Ты занимаешь {self.get_place_in_top(user_id)} место в топе.
-Осталось попыток: {attempts}"""
-            elif delta < 0:
-                return f"""{mention}, твой писюн уменьшился на {abs(delta)} см.
-Теперь он равен {user_size} см.
-Ты занимаешь {self.get_place_in_top(user_id)} место в топе.
-Осталось попыток: {attempts}"""
-            else:
-                return f"""{mention}, твой писюн не изменился.
-Сейчас он равен {user_size} см.
-Ты занимаешь {self.get_place_in_top(user_id)} место в топе.
-Осталось попыток: {attempts}"""
-        else:
-            return f"""{mention}, твой писюн уменьшился на {abs(delta)} см.
-Теперь он равен {user_size} см.
-Ты занимаешь {self.get_place_in_top(user_id)} место в топе."""
+    # МЕТОДЫ ДЛЯ РАБОТЫ С БД
 
-    def get_value(self, value: str, cond: str, cond_value: any) -> any:
-        req = self.cur.execute(f"""SELECT {value} FROM users WHERE {cond} = {cond_value}""")
+    # Возвращает выбранное значение по id
+    def get_user_value(self, value: str, user_id: int) -> int:
+        req = self.cur.execute(f"""SELECT {value} FROM users WHERE id = {user_id}""")
         return req.fetchone()[0]
 
-    def update_value(self, value: str, new_value: any, cond: str, cond_value: any) -> None:
-        self.cur.execute(f"""UPDATE users SET {value} = {new_value} WHERE {cond} = {cond_value}""")
+    # Возвращает выбранные значения всех юзеров
+    def get_values(self, value: str, order: str = None, reverse: bool = False) -> list[list[int]]:
+        req = f"SELECT {value} FROM users "
+        # Порядок сортировки
+        if order:
+            req += f"ORDER BY {order} "
+            if reverse:
+                req += "DESC"
+        return self.cur.execute(req).fetchall()
 
-    def is_user_exist(self, user_id: int) -> bool:
-        req = self.cur.execute(f"""SELECT EXISTS(SELECT 1 FROM users WHERE id={user_id})""")
-        return bool(req.fetchone()[0])
+    # Изменяет выбранное значение у юзера
+    def update_value(self, value: str, new_value: int, user_id: int) -> None:
+        self.cur.execute(f"""UPDATE users SET {value} = {new_value} WHERE id = {user_id}""")
 
+    # Добавляет юзера в БД
     def add_user(self, user_id: int) -> None:
         try:
             self.cur.execute(f"""INSERT INTO users VALUES ({user_id}, 0, 1)""")
@@ -51,83 +45,125 @@ class DataBase:
         except Exception as ex:
             error(ex)
 
-    def add_attempts(self) -> None:
+    # Добавляет юзера, если его нет в БД
+    def add_user_if_not_exist(self, user_id: int) -> None:
         try:
-            conn = sqlite3.connect("dicktator.db")
-            conn.autocommit = True
-            cur = conn.cursor()
-            users = cur.execute("""SELECT * FROM users""").fetchall()
-            if users:
-                for user in users:
-                    attempts = cur.execute(f"SELECT attempts FROM users WHERE id = {user[0]}").fetchone()[0]
-                    cur.execute(f"UPDATE users SET 'attempts' = {attempts + 1} WHERE id = {user[0]}")
-            cur.close()
-            conn.close()
-            success("Попытки добавлены")
-            startCoroutine(self.add_attempts)
+            req = self.cur.execute(f"""SELECT EXISTS(SELECT 1 FROM users WHERE id={user_id})""")
+            print("is user")
+            if not bool(req.fetchone()[0]):
+                print("add user")
+                self.add_user(user_id)
         except Exception as ex:
             error(ex)
 
-    def change_size(self, user_id: int, delta: int, is_penalty: bool = True, mention="User", attempts: int = 0) -> str:
-        if not self.is_user_exist(user_id):
-            self.add_user(user_id)
-        user_size = self.get_value("size", "id", user_id)
-        if user_size + delta < 0:
+    # КОМАНДЫ ДЛЯ !dick
+
+    # Изменяет размер писюна на delta см
+    def change_dick_size(self, user_id: int, mention: str, delta: int, is_penalty: bool = False) -> str:
+        user_size = self.get_user_value("size", user_id)
+        if (user_size + delta) < 0:
             new_size = 0
-            self.update_value("size", new_size, "id", user_id)
         else:
             new_size = user_size + delta
-            self.update_value("size", new_size, "id", user_id)
-        return self.get_dick_answer(user_id, mention, delta, new_size, is_penalty, attempts)
+        self.update_value("size", new_size, user_id)
+        return self.get_dick_answer(user_id, mention, delta, is_penalty)
 
-    def dick_db(self, user_id: int, mention="User") -> str:
-        if not self.is_user_exist(user_id):
-            self.add_user(user_id)
-        attempts = self.get_value("attempts", "id", user_id)
-        user_size = self.get_value("size", "id", user_id)
+    # Изменяет размер писюна на случайное число см
+    def dick_random(self, user_id: int, mention: str) -> str:
+        self.add_user_if_not_exist(user_id)
+        attempts = self.get_user_value("attempts", user_id)
         if attempts > 0:
+            # Вычитает одну попытку
             attempts -= 1
-            self.update_value("attempts", attempts, "id", user_id)
-            delta = random.randint(-5, 10)
-            return self.change_size(user_id, delta, False, mention, attempts)
+            self.update_value("attempts", attempts, user_id)
+            delta = randint(ConfigVars.MIN_DICK_DELTA, ConfigVars.MAX_DICK_DELTA)
+            return self.change_dick_size(user_id, mention, delta)
         else:
-            return f"""{mention}, у тебя не осталось попыток.
-Сейчас у тебя {user_size} см.
-Ты занимаешь {self.get_place_in_top(user_id)} место в топе."""
+            return self.get_dick_answer(user_id, mention)
 
-    def get_top(self) -> list:
+    # Возвращает текст, которым ответит бот
+    def get_dick_answer(self, user_id: int, mention: str, delta: int = 0, is_penalty: bool = False) -> str:
+        user_size = self.get_user_value("size", user_id)
+        attempts = self.get_user_value("attempts", user_id)
+        top_place = self.get_place_in_top(user_id)
+        answer = f"{mention}, "
+        if attempts > 0:
+            if delta > 0:
+                answer += f"твой писюн вырос на {delta} см."
+            elif delta < 0:
+                answer += f"твой писюн уменьшился на {abs(delta)} см."
+            else:
+                answer += f"твой писюн не изменился."
+            now_word = "Теперь"
+        else:
+            answer += f"у тебя не осталось попыток"
+            now_word = "Сейчас"
+        answer += f"\n{now_word} он равен {user_size} см.\nТы занимаешь {top_place} место в топе."
+        if not is_penalty:
+            match attempts:
+                case 0:
+                    f"\nУ тебя не осталось попыток"
+                case 1:
+                    f"\nУ тебя осталась 1 попытка"
+                case _:
+                    answer += f"\nУ тебя осталось {attempts} {self.get_atts_ending(attempts)}"
+        return answer
+
+    # КОМАНДЫ БОТА
+
+    # Возвращает количество оставшихся попыток у юзера
+    def get_attempts(self, user_id: int, mention: str) -> str:
+        atts = self.get_user_value("attempts", user_id)
+        answer = f"{mention}, у тебя осталось {atts} {self.get_atts_ending(atts)}"
+        return answer
+
+    # Возвращает общий топ юзеров
+    def get_top(self) -> list[[int, int, int]]:
         try:
-            users = self.cur.execute("SELECT * FROM users ORDER BY size DESC").fetchall()
+            users = self.get_values("*", "size", True)
         except Exception as ex:
             users = []
             error(ex)
         return users
 
-    def get_place_in_top(self, user_id: int) -> int:
-        for i, user in enumerate(self.get_top()):
-            if user_id == user[0]:
+    # Возвращает позицию юзера в общем топе
+    def get_place_in_top(self, user_id: any) -> int:
+        top = self.get_top()
+        for i, user_inf in enumerate(top):
+            if user_id in user_inf:
                 return i + 1
 
-    def subtract_attempts(self):
+    # ДРУГИЕ ФУНКЦИИ
+
+    # Добавляет 1 попытку всем юзерам каждый день
+    async def add_attempts(self) -> None:
         try:
-            for user in self.cur.execute("""SELECT id FROM users""").fetchall():
-                attempts = self.get_value("attempts", "id", user[0])
-                self.update_value("attempts", attempts - 1, "id", user[0])
-            success("Попытки вычтены")
+            while True:
+                # Оставшееся время до добавления попыток
+                time_delta = get_time_delta(ConfigVars.ATTS_ADD_HOUR)
+                await asyncio.sleep(time_delta)
+                users = self.get_values("*")
+                if users:
+                    for user in users:
+                        attempts = self.get_user_value("attempts", user[0])
+                        self.cur.execute(f"UPDATE users SET 'attempts' = {attempts + 1} WHERE id = {user[0]}")
+                success("Попытки добавлены")
         except Exception as ex:
             error(ex)
 
+    @staticmethod
+    # Возвращает "попытка" с правильным окончанием
+    def get_atts_ending(num: int | float) -> str:
+        if num == 1:
+            return "попытка"
+        elif num in (2, 3, 4):
+            return "попытки"
+        else:
+            return "попыток"
+
 
 def main():
-    db = DataBase()
-    # db.subtractAttempts()
-    # cryspex 459839612668608523
-    # defos 1246094072020603035
-    # romach 1246094142409543773
-    # nollsen 1246094210529103965
-    # jesus 704286738197250128
-    # slava 1250387093604143184
-    # db.cur.execute("""CREATE TABLE users (id integer PRIMARY KEY, size integer, attempts integer)""")
+    DataBase()
 
 
 if __name__ == "__main__":
