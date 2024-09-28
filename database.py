@@ -73,8 +73,7 @@ class DataBase:
         attempts = self.get_user_value("attempts", user_id)
         if attempts > 0:
             # Вычитает одну попытку
-            attempts -= 1
-            self.update_value("attempts", attempts, user_id)
+            self.update_value("attempts", attempts - 1, user_id)
             delta = randint(ConfigVars.MIN_DICK_DELTA, ConfigVars.MAX_DICK_DELTA)
             return self.change_dick_size(user_id, mention, delta)
         else:
@@ -87,7 +86,7 @@ class DataBase:
         attempts = self.get_user_value("attempts", user_id)
         top_place = self.get_place_in_top(user_id)
         answer = f"{mention}, "
-        if not is_atts_were:
+        if is_atts_were:
             if delta > 0:
                 answer += f"твой писюн вырос на {delta} см."
             elif delta < 0:
