@@ -12,8 +12,6 @@ class ConfigVars:
     ATTS_ADD_HOUR: int = 17
     MIN_DICK_DELTA: int = -5
     MAX_DICK_DELTA: int = 10
-    GENA_MIN_HOURS: int = 6
-    GENA_MAX_HOURS: int = 18
     TIMEZONE: timezone = timezone(timedelta(hours=3))
     GIT_REPO: str = Path(__file__).parent.resolve().joinpath(".git")
     US_DEBT_URL = "https://www.pgpf.org/national-debt-clock"
