@@ -135,19 +135,6 @@ class DataBase:
             if user_id in user_inf:
                 return i + 1
 
-    # ФУНКЦИИ GIT
-    @staticmethod
-    def git_push_db() -> None:
-        try:
-            repo = Repo(ConfigVars.GIT_REPO)
-            repo.index.add(["dicktator.db"])
-            repo.index.commit("database updated")
-            origin = repo.remote()
-            origin.push()
-            inf("База данных обновлена")
-        except Exception as ex:
-            error(ex)
-
     # ДРУГИЕ ФУНКЦИИ
 
     # Добавляет 1 попытку всем юзерам каждый день
@@ -164,6 +151,19 @@ class DataBase:
                         self.cur.execute(f"UPDATE users SET 'attempts' = {attempts + 1} WHERE id = {user[0]}")
                 success("Попытки добавлены")
                 self.git_push_db()
+        except Exception as ex:
+            error(ex)
+
+    # Заливает базу данных на GitHub
+    @staticmethod
+    def git_push_db() -> None:
+        try:
+            repo = Repo(ConfigVars.GIT_REPO)
+            repo.index.add(["dicktator.db"])
+            repo.index.commit("database updated")
+            origin = repo.remote()
+            origin.push()
+            inf("База данных обновлена")
         except Exception as ex:
             error(ex)
 
