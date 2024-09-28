@@ -1,56 +1,53 @@
 from typing import Callable
 from threading import Timer
 from random import randrange
-from datetime import datetime, timedelta, timezone
+from config import ConfigVars
+from datetime import datetime, timedelta
 
-tz = timezone(timedelta(hours=3))
 
-
-def getTime() -> str:
-    time = datetime.today().astimezone(tz)
+def get_time() -> str:
+    time = datetime.today().astimezone(ConfigVars.TIMEZONE)
     return time.strftime("%d-%m %H:%M:%S")
 
 
-def convertTime(secs: float) -> str:
-    time = datetime.today().astimezone(tz)
+def convert_time(secs: float) -> str:
+    time = datetime.today().astimezone(ConfigVars.TIMEZONE)
     time += timedelta(seconds=secs)
     return time.strftime("%d-%m %H:%M:%S")
 
 
-def randomTime() -> float:
-    cur_time = datetime.today().astimezone(tz)
-    rand_hour = randrange(6, 18)
+def get_time_delta(hour: int) -> float:
+    cur_time = datetime.today().astimezone(ConfigVars.TIMEZONE)
+    next_time = cur_time.replace(
+        day=cur_time.day,
+        hour=hour,
+        minute=0,
+        second=0,
+        microsecond=0,
+        tzinfo=ConfigVars.TIMEZONE
+    )
+    if cur_time > next_time:
+        next_time += timedelta(days=1)
+    delta_time = (next_time - cur_time).total_seconds()
+    return delta_time
+
+
+def get_random_time_delta(hours_min: int, hours_max: int) -> float:
+    cur_time = datetime.today().astimezone(ConfigVars.TIMEZONE)
+    rand_hour = randrange(hours_min, hours_max)
     rand_min = randrange(0, 60)
     next_time = cur_time + timedelta(hours=rand_hour, minutes=rand_min)
     delta_time = (next_time - cur_time).total_seconds()
     return delta_time
 
 
-def startCoroutine(func: Callable, start_hour: int = 17) -> None:
-    cur_time = datetime.today().astimezone(tz)
-    next_time = cur_time.replace(
-        day=cur_time.day,
-        hour=start_hour,
-        minute=0,
-        second=0,
-        microsecond=0,
-        tzinfo=tz
-    )
-    if cur_time > next_time:
-        next_time += timedelta(days=1)
-    delta_time = (next_time - cur_time).total_seconds()
+def start_coroutine(func: Callable, delta_time: float) -> None:
     t = Timer(delta_time, func)
     t.start()
 
 
-def test():
-    print("test")
-    startCoroutine(test)
-
-
 def main():
-    # test()
-    print(getTime())
+    print(get_time())
 
 
 if __name__ == "__main__":
