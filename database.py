@@ -78,15 +78,16 @@ class DataBase:
             delta = randint(ConfigVars.MIN_DICK_DELTA, ConfigVars.MAX_DICK_DELTA)
             return self.change_dick_size(user_id, mention, delta)
         else:
-            return self.get_dick_answer(user_id, mention)
+            return self.get_dick_answer(user_id, mention, is_atts_were=False)
 
     # Возвращает текст, которым ответит бот
-    def get_dick_answer(self, user_id: int, mention: str, delta: int = 0, is_penalty: bool = False) -> str:
+    def get_dick_answer(self, user_id: int, mention: str, delta: int = 0, is_penalty: bool = False,
+                        is_atts_were: bool = True) -> str:
         user_size = self.get_user_value("size", user_id)
         attempts = self.get_user_value("attempts", user_id)
         top_place = self.get_place_in_top(user_id)
         answer = f"{mention}, "
-        if attempts > 0:
+        if not is_atts_were:
             if delta > 0:
                 answer += f"твой писюн вырос на {delta} см."
             elif delta < 0:
