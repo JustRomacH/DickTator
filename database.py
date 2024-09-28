@@ -139,11 +139,15 @@ class DataBase:
     # ФУНКЦИИ GIT
     @staticmethod
     def git_push_db() -> None:
-        repo = Repo(ConfigVars.GIT_REPO)
-        repo.index.add(["dicktator.db"])
-        repo.index.commit("database updated")
-        origin = repo.remote()
-        origin.push()
+        try:
+            repo = Repo(ConfigVars.GIT_REPO)
+            repo.index.add(["dicktator.db"])
+            repo.index.commit("database updated")
+            origin = repo.remote()
+            origin.push()
+            inf("База данных обновлена")
+        except Exception as ex:
+            error(ex)
 
     # ДРУГИЕ ФУНКЦИИ
 
