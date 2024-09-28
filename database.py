@@ -96,11 +96,10 @@ class DataBase:
                 answer += f"твой писюн уменьшился на {abs(delta)} см."
             else:
                 answer += f"твой писюн не изменился."
-            now_word = "Теперь"
+            answer += f"\nТеперь он равен {user_size} см.\nТы занимаешь {top_place} место в топе."
         else:
-            answer += f"у тебя не осталось попыток"
-            now_word = "Сейчас"
-        answer += f"\n{now_word} он равен {user_size} см.\nТы занимаешь {top_place} место в топе."
+            answer += f"у тебя не осталось попыток."
+            answer += f"\nСейчас твой писюн равен {user_size} см.\nТы занимаешь {top_place} место в топе."
         if not is_penalty:
             match attempts:
                 case 0:
