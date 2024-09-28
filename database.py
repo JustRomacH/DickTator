@@ -44,7 +44,6 @@ class DataBase:
         try:
             self.cur.execute(f"""INSERT INTO users VALUES ({user_id}, 0, 1)""")
             inf("Пользователь добавлен")
-            self.git_push_db()
         except Exception as ex:
             error(ex)
 
@@ -67,7 +66,6 @@ class DataBase:
         else:
             new_size = user_size + delta
         self.update_value("size", new_size, user_id)
-        self.git_push_db()
         return self.get_dick_answer(user_id, mention, delta, is_penalty)
 
     # Изменяет размер писюна на случайное число см
