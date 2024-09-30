@@ -50,8 +50,8 @@ class DickTator(commands.Bot):
             users = self.DB.get_top()
             if users:
                 answer = "Топ игроков:"
-                for i, user in enumerate(users):
-                    answer += f"\n{i + 1}. {self.get_user(user[0]).display_name} - {user[1]} см"
+                for i, user_inf in enumerate(users):
+                    answer += f"\n{i + 1}. {self.get_user(user_inf[0]).display_name} - {user_inf[1]} см"
             else:
                 answer = "Похоже топ пустой..."
                 warning(answer)
@@ -100,15 +100,16 @@ class DickTator(commands.Bot):
     # Срабатывает при обновлении активности
     async def on_presence_update(self, before: Member, after: Member) -> None:
         try:
-            user_id = after.id
-            cur_act = after.activity.name.lower()
             channel = after.guild.text_channels[0]
             # Если у юзера запрещённая активность
-            if any(ban_act in cur_act for ban_act in ConfigVars.BANNED_ACT):
-                self.DB.add_user_if_not_exist(user_id)
-                await channel.send(f"{after.mention} {choice(ConfigVars.LEAVE_PHRASES)}")
-                answer = self.DB.change_dick_size(user_id, after.mention, ConfigVars.PENALTY)
-                await channel.send(answer)
+            for act in after.activities:
+                if any(ban_act in act.name for ban_act in ConfigVars.BANNED_ACT):
+                    self.DB.add_user_if_not_exist(after.id)
+                    await channel.send(
+                        f"{after.mention} {choice(ConfigVars.LEAVE_PHRASES)}"
+                    )
+                    answer = self.DB.change_dick_size(after.id, after.mention, ConfigVars.PENALTY)
+                    await channel.send(answer)
         except AttributeError:
             pass
         except Exception as ex:
@@ -128,16 +129,12 @@ class DickTator(commands.Bot):
     @staticmethod
     # Проверяет, есть ли GIF в сообщении
     def is_gif(content: str) -> bool:
-        attrs = ("tenor", "gif")
-        if any(attr in content for attr in attrs):
-            return True
-        else:
-            return False
+        attrs = ("tenor", ".gif")
+        return any(attr in content for attr in attrs)
 
 
 def main() -> None:
-    bot = DickTator()
-    bot.run(ConfigVars.TOKEN, log_level=0)
+    DickTator().run(ConfigVars.TOKEN, log_level=0)
 
 
 if __name__ == "__main__":
