@@ -103,8 +103,9 @@ class DickTator(commands.Bot):
             channel = after.guild.text_channels[0]
             # Если у юзера запрещённая активность
             for act in after.activities:
-                if any(ban_act in act.name for ban_act in ConfigVars.BANNED_ACT):
+                if any(ban_act in act.name.lower() for ban_act in ConfigVars.BANNED_ACT):
                     self.DB.add_user_if_not_exist(after.id)
+                    inf(f"{after.display_name} пойман за {act.name}")
                     await channel.send(
                         f"{after.mention} {choice(ConfigVars.LEAVE_PHRASES)}"
                     )
