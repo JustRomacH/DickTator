@@ -101,16 +101,18 @@ class DickTator(commands.Bot):
     async def on_presence_update(self, before: Member, after: Member) -> None:
         try:
             channel = after.guild.text_channels[0]
-            # Если у юзера запрещённая активность
-            for act in after.activities:
-                if any(ban_act in act.name.lower() for ban_act in ConfigVars.BANNED_ACT):
-                    self.DB.add_user_if_not_exist(after.id)
-                    inf(f"{after.display_name} пойман за {act.name}")
-                    await channel.send(
-                        f"{after.mention} {choice(ConfigVars.LEAVE_PHRASES)}"
-                    )
-                    answer = self.DB.change_dick_size(after.id, after.mention, ConfigVars.PENALTY)
-                    await channel.send(answer)
+            for ban_act in ConfigVars.BANNED_ACT:
+                # Если до этого была незапрещённая активность
+                if not any(ban_act in prev_act.name.lower() for prev_act in before.activities):
+                    # Если у юзера запрещённая активность
+                    if any(ban_act in cur_act.name.lower() for cur_act in after.activities):
+                        self.DB.add_user_if_not_exist(after.id)
+                        inf(f"{after.display_name} наказан")
+                        await channel.send(
+                            f"{after.mention}, {choice(ConfigVars.LEAVE_PHRASES)}"
+                        )
+                        answer = self.DB.change_dick_size(after.id, after.mention, ConfigVars.PENALTY)
+                        await channel.send(answer)
         except AttributeError:
             pass
         except Exception as ex:
