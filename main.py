@@ -127,14 +127,6 @@ class DickTator(commands.Bot):
         else:
             error(exception)
 
-    # ФУНКЦИИ
-
-    @staticmethod
-    # Проверяет, есть ли GIF в сообщении
-    def is_gif(content: str) -> bool:
-        attrs = ("tenor", ".gif")
-        return any(attr in content for attr in attrs)
-
 
 def main() -> None:
     DickTator().run(ConfigVars.TOKEN, log_level=0)
