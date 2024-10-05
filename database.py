@@ -123,11 +123,9 @@ class DataBase:
 
     # Возвращает позицию юзера в общем топе
     def get_place_in_top(self, user_id: int) -> int:
-        return [
-            i + 1 if user_id in user_inf
-            else 0
-            for i, user_inf in enumerate(self.get_top())
-        ][0]
+        for i, user_inf in enumerate(self.get_top()):
+            if user_id in user_inf:
+                return i + 1
 
     # ДРУГИЕ ФУНКЦИИ
 
@@ -173,7 +171,7 @@ class DataBase:
 
 
 def main():
-    DataBase()
+    DataBase().get_place_in_top(704286738197250128)
 
 
 if __name__ == "__main__":
