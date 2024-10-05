@@ -51,7 +51,7 @@ class DickTator(commands.Bot):
             if users:
                 answer = "Топ игроков:"
                 for i, user_inf in enumerate(users):
-                    answer += f"\n{i + 1}. {self.get_user(user_inf[0]).display_name} - {user_inf[1]} см"
+                    answer += f"\n{i + 1}. {self.get_user(user_inf[0]).display_name} — {user_inf[1]} см"
             else:
                 answer = "Похоже топ пустой..."
                 warning(answer)
