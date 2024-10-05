@@ -171,7 +171,7 @@ class DataBase:
 
 
 def main():
-    DataBase().get_place_in_top(704286738197250128)
+    DataBase()
 
 
 if __name__ == "__main__":
