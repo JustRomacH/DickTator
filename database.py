@@ -60,11 +60,7 @@ class DataBase:
     # Изменяет размер писюна на delta см
     def change_dick_size(self, user_id: int, mention: str, delta: int, is_penalty: bool = False) -> str:
         user_size = self.get_user_value("size", user_id)
-        if (user_size + delta) < 0:
-            new_size = 0
-        else:
-            new_size = user_size + delta
-        self.update_value("size", new_size, user_id)
+        self.update_value("size", user_size + delta, user_id)
         return self.get_dick_answer(user_id, mention, delta, is_penalty)
 
     # Изменяет размер писюна на случайное число см
@@ -121,16 +117,17 @@ class DataBase:
         try:
             users = self.get_values("*", "size", True)
         except Exception as ex:
-            users = []
+            users = list()
             error(ex)
         return users
 
     # Возвращает позицию юзера в общем топе
-    def get_place_in_top(self, user_id: any) -> int:
-        top = self.get_top()
-        for i, user_inf in enumerate(top):
-            if user_id in user_inf:
-                return i + 1
+    def get_place_in_top(self, user_id: int) -> int:
+        return [
+            i + 1 if user_id in user_inf
+            else 0
+            for i, user_inf in enumerate(self.get_top())
+        ][0]
 
     # ДРУГИЕ ФУНКЦИИ
 
