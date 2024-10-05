@@ -37,7 +37,7 @@ class DickTator(commands.Bot):
             await ctx.channel.send(ConfigVars.STALCRAFT_FACE)
 
         # Изменяет размер писюна на рандомное значение
-        @self.command(aliases=["d", "p", "penis"])
+        @self.command(aliases=["d", "p", "penis", "cock", "4len"])
         async def dick(ctx: commands.Context) -> None:
             user_id = ctx.author.id
             mention = ctx.author.mention
@@ -45,7 +45,7 @@ class DickTator(commands.Bot):
             await ctx.channel.send(answer)
 
         # Выводит топ игроков
-        @self.command(aliases=["s", "t", "top", "stat"])
+        @self.command(aliases=["s", "t", "top", "stat", "stas"])
         async def stats(ctx: commands.Context) -> None:
             users = self.DB.get_top()
             if users:

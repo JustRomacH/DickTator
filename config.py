@@ -54,8 +54,8 @@ class ConfigVars:
 !gosdolg - скидывает госдолг США
 
 Алиасы:
-!dick - penis, d, p
+!dick - penis, cock, 4len, d, p
 !attempts - a, att, atts, try, tries
-!stats - s, t, stat, top
+!stats - s, t, stat, stas, top
 !stalcraft - sc, face
 !gosdolg - gd, us, nd, usa, dolg, debt"""
