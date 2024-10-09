@@ -105,14 +105,15 @@ class DickTator(commands.Bot):
                 # Если до этого была незапрещённая активность
                 if not any(ban_act in prev_act.name.lower() for prev_act in before.activities):
                     # Если у юзера запрещённая активность
-                    if any(ban_act in cur_act.name.lower() for cur_act in after.activities):
-                        self.DB.add_user_if_not_exist(after.id)
-                        await channel.send(
-                            f"{after.mention}, {choice(ConfigVars.LEAVE_PHRASES)}"
-                        )
-                        answer = self.DB.change_dick_size(after.id, after.mention, ConfigVars.PENALTY)
-                        await channel.send(answer)
-                        inf(f"{after.display_name} наказан за {after.activity.name}")
+                    for cur_act in after.activities:
+                        if ban_act in cur_act.name.lower():
+                            self.DB.add_user_if_not_exist(after.id)
+                            await channel.send(
+                                f"{after.mention}, {choice(ConfigVars.LEAVE_PHRASES)}"
+                            )
+                            answer = self.DB.change_dick_size(after.id, after.mention, ConfigVars.PENALTY)
+                            await channel.send(answer)
+                            inf(f"{after.display_name} наказан за {cur_act.name}")
         except AttributeError:
             pass
         except Exception as ex:
