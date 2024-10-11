@@ -94,22 +94,22 @@ class DataBase:
             answer += f"у тебя не осталось попыток."
             answer += f"\nСейчас твой писюн равен {user_size} см.\nТы занимаешь {top_place} место в топе."
         if not is_penalty:
-            match attempts:
-                case 0:
-                    answer += f"\nУ тебя не осталось попыток"
-                case 1:
-                    answer += f"\nУ тебя осталась 1 попытка"
-                case _:
-                    answer += f"\nУ тебя осталось {attempts} {self.get_atts_ending(attempts)}"
+            answer += "\n" + self.get_attempts(user_id)
         return answer
 
     # КОМАНДЫ БОТА
 
     # Возвращает количество оставшихся попыток у юзера
-    def get_attempts(self, user_id: int, mention: str) -> str:
+    def get_attempts(self, user_id: int) -> str:
         self.add_user_if_not_exist(user_id)
-        atts = self.get_user_value("attempts", user_id)
-        answer = f"{mention}, у тебя осталось {atts} {self.get_atts_ending(atts)}"
+        attempts = self.get_user_value("attempts", user_id)
+        match attempts:
+            case 0:
+                answer = f"У тебя не осталось попыток"
+            case 1:
+                answer = f"У тебя осталась 1 попытка"
+            case _:
+                answer = f"У тебя осталось {attempts} {self.get_atts_ending(attempts)}"
         return answer
 
     # Возвращает общий топ юзеров
