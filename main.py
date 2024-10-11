@@ -63,7 +63,7 @@ class DickTator(commands.Bot):
             try:
                 user_id = ctx.author.id
                 mention = ctx.author.mention
-                await ctx.channel.send(self.DB.get_attempts(user_id, mention))
+                await ctx.channel.send(f"{mention}, {self.DB.get_attempts(user_id).lower()}")
             except Exception as ex:
                 await ctx.channel.send("Что-то пошло не так...")
                 error(ex)
