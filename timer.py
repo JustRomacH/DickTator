@@ -1,5 +1,3 @@
-from typing import Callable
-from threading import Timer
 from random import randrange
 from config import ConfigVars
 from datetime import datetime, timedelta
