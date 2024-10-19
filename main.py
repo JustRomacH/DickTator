@@ -2,9 +2,9 @@ import requests
 from logger import *
 from random import choice
 from bs4 import BeautifulSoup
-from config import ConfigVars
 from database import DataBase
 from discord.ext import commands
+from config import ConfigVars, COMMANDS
 from discord import Intents, Member, Message
 from discord.ext.commands import Context, errors
 
@@ -18,7 +18,23 @@ class DickTator(commands.Bot):
     async def on_ready(self):
         success("Бот запущен...")
         await self.add_commands()
+        self.add_funcs_info()
         await self.DB.add_attempts()
+
+    # Добавляет информацию о функциях в HELP в config
+    def add_funcs_info(self):
+        ConfigVars.HELP += "\n\nКоманды:"
+        for func in self.commands:
+            name = func.name
+            if not name == 'help':
+                ConfigVars.HELP += f"\n!{name} - {COMMANDS.get(name)}"
+
+        ConfigVars.HELP += "\n\nАлиасы:"
+        for func in self.commands:
+            name = func.name
+            if not name == 'help':
+                aliases: list = sorted(func.aliases, key=len)
+                ConfigVars.HELP += f"\n!{name} - {", ".join(aliases)}"
 
     # КОМАНДЫ
 
@@ -26,7 +42,7 @@ class DickTator(commands.Bot):
     async def add_commands(self) -> None:
 
         # Выводит информацию о боте
-        @self.command(aliases=["inf", "i", "h", "info"])
+        @self.command(aliases=["i", "h", "inf", "info"])
         async def infa(ctx: commands.Context):
             await ctx.channel.send(ConfigVars.HELP)
 

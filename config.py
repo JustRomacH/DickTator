@@ -3,6 +3,15 @@ from pathlib import Path
 from dataclasses import dataclass
 from datetime import timezone, timedelta
 
+COMMANDS: dict = {
+    "infa": "выводит это сообщение",
+    "dick": "изменяет размер писюна",
+    "attempts": "выводит количество попыток",
+    "stats": "выводит глобальный топ игроков",
+    "stalcraft": "скидывает лицо из Stalcraft",
+    "gosdolg": "выводит госдолг США"
+}
+
 
 # Основные переменные бота
 @dataclass
@@ -43,19 +52,9 @@ class ConfigVars:
 1 попытка увеличить свой писюн. Для этого
 нужно использовать команду !dick. Рандом
 выдаёт числа от {MIN_DICK_DELTA} до {MAX_DICK_DELTA} см. За запуск
-Доты, Unturned и т.д. твой писюн
+Доты, Unturned и т.п. твой писюн
 уменьшается на {abs(PENALTY)} см.
 
 Команды:
-!dick - изменяет размер писюна
-!attempts - выводит количество попыток
-!stats - выводит глобальный топ игроков
-!stalcraft - скидывает лицо из Stalcraft
-!gosdolg - скидывает госдолг США
 
-Алиасы:
-!dick - penis, cock, 4len, d, p
-!attempts - a, att, atts, try, tries
-!stats - s, t, stat, stas, top
-!stalcraft - sc, face
-!gosdolg - gd, us, nd, usa, dolg, debt"""
+Алиасы:"""
