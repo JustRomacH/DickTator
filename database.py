@@ -79,7 +79,6 @@ class DataBase:
     def get_dick_answer(self, user_id: int, mention: str, delta: int = 0, is_penalty: bool = False,
                         is_atts_were: bool = True) -> str:
         user_size = self.get_user_value("size", user_id)
-        attempts = self.get_user_value("attempts", user_id)
         top_place = self.get_place_in_top(user_id)
         answer = f"{mention}, "
         if is_atts_were:
