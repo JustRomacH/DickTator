@@ -22,7 +22,7 @@ class DickTator(commands.Bot):
         await self.DB.add_attempts()
 
     # Добавляет информацию о функциях в HELP в config
-    def add_funcs_info(self):
+    def add_funcs_info(self) -> None:
         ConfigVars.HELP += "\n\nКоманды:"
         for func in self.commands:
             name = func.name
