@@ -125,8 +125,6 @@ class DickTator(commands.Bot):
                             )
                             answer = self.DB.change_dick_size(after.id, after.mention, ConfigVars.PENALTY)
                             await channel.send(answer)
-        except AttributeError:
-            pass
         except Exception:
             pass
 
