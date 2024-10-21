@@ -2,6 +2,9 @@ from os import getenv
 from pathlib import Path
 from dataclasses import dataclass
 from datetime import timezone, timedelta
+from dotenv import load_dotenv
+
+load_dotenv()
 
 COMMANDS: dict = {
     "infa": "выводит это сообщение",
