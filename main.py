@@ -1,5 +1,4 @@
 import requests
-from logger import *
 from random import choice
 from bs4 import BeautifulSoup
 from database import DataBase
@@ -16,7 +15,6 @@ class DickTator(commands.Bot):
 
     # Срабатывает при запуске бота
     async def on_ready(self):
-        success("Бот запущен...")
         await self.add_commands()
         self.add_funcs_info()
         await self.DB.add_attempts()
@@ -70,7 +68,6 @@ class DickTator(commands.Bot):
                     answer += f"\n{i + 1}. {self.get_user(user_inf[0]).display_name} — {user_inf[1]} см"
             else:
                 answer = "Похоже топ пустой..."
-                warning(answer)
             await ctx.channel.send(answer)
 
         # Выводит количество оставшихся попыток
@@ -80,9 +77,8 @@ class DickTator(commands.Bot):
                 user_id = ctx.author.id
                 mention = ctx.author.mention
                 await ctx.channel.send(f"{mention}, {self.DB.get_attempts(user_id).lower()}")
-            except Exception as ex:
+            except Exception:
                 await ctx.channel.send("Что-то пошло не так...")
-                error(ex)
 
         # Выводит госдолг США
         @self.command(aliases=["gd", "nd", "usa", "us", "dolg", "debt"])
@@ -98,8 +94,8 @@ class DickTator(commands.Bot):
                 await ctx.channel.send(ConfigVars.US_DEBT_GIF)
             except AttributeError:
                 await ctx.channel.send("Произошла ошибка...")
-            except Exception as ex:
-                error(ex)
+            except Exception:
+                pass
 
     # ИВЕНТЫ
 
@@ -129,11 +125,10 @@ class DickTator(commands.Bot):
                             )
                             answer = self.DB.change_dick_size(after.id, after.mention, ConfigVars.PENALTY)
                             await channel.send(answer)
-                            inf(f"{after.display_name} наказан за {cur_act.name}")
         except AttributeError:
             pass
-        except Exception as ex:
-            error(ex)
+        except Exception:
+            pass
 
     # Отлавливает ошибки команд
     async def on_command_error(self, context: Context, exception: errors.CommandError) -> None:
@@ -141,8 +136,6 @@ class DickTator(commands.Bot):
             await context.channel.send(
                 f"{context.author.mention}, такой команды не существует..."
             )
-        else:
-            error(exception)
 
 
 def main() -> None:

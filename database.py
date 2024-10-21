@@ -1,7 +1,6 @@
 import sqlite3
 import asyncio
 from git import Repo
-from logger import *
 from random import randint
 from config import ConfigVars
 from timer import get_time_delta
@@ -9,11 +8,7 @@ from timer import get_time_delta
 
 class DataBase:
     def __init__(self):
-        try:
-            self.conn = sqlite3.connect("dicktator.db")
-            success("База данных подключена...")
-        except Exception as ex:
-            error(ex)
+        self.conn = sqlite3.connect("dicktator.db")
         self.conn.autocommit = True
         self.cur = self.conn.cursor()
 
@@ -42,9 +37,8 @@ class DataBase:
     def add_user(self, user_id: int) -> None:
         try:
             self.cur.execute(f"""INSERT INTO users VALUES ({user_id}, 0, 1)""")
-            inf("Пользователь добавлен")
-        except Exception as ex:
-            error(ex)
+        except Exception:
+            pass
 
     # Добавляет юзера, если его нет в БД
     def add_user_if_not_exist(self, user_id: int) -> None:
@@ -52,8 +46,8 @@ class DataBase:
             req = self.cur.execute(f"""SELECT EXISTS(SELECT 1 FROM users WHERE id={user_id})""")
             if not bool(req.fetchone()[0]):
                 self.add_user(user_id)
-        except Exception as ex:
-            error(ex)
+        except Exception:
+            pass
 
     # КОМАНДЫ ДЛЯ !dick
 
@@ -115,9 +109,8 @@ class DataBase:
     def get_top(self) -> list[[int, int, int]]:
         try:
             users = self.get_values("*", "size", True)
-        except Exception as ex:
+        except Exception:
             users = list()
-            error(ex)
         return users
 
     # Возвращает позицию юзера в общем топе
@@ -140,10 +133,9 @@ class DataBase:
                     for user in users:
                         attempts = self.get_user_value("attempts", user[0])
                         self.cur.execute(f"UPDATE users SET 'attempts' = {attempts + 1} WHERE id = {user[0]}")
-                success("Попытки добавлены")
                 self.git_push_db()
-        except Exception as ex:
-            error(ex)
+        except Exception:
+            pass
 
     # Заливает базу данных на GitHub
     @staticmethod
@@ -154,9 +146,8 @@ class DataBase:
             repo.index.commit("database updated")
             origin = repo.remote()
             origin.push()
-            inf("База данных обновлена")
-        except Exception as ex:
-            error(ex)
+        except Exception:
+            pass
 
     @staticmethod
     # Возвращает "попытка" с правильным окончанием
