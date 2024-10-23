@@ -1,8 +1,8 @@
 import sqlite3
 import asyncio
 from git import Repo
+from config import *
 from random import randint
-from config import ConfigVars
 from timer import get_time_delta
 
 
@@ -37,8 +37,9 @@ class DataBase:
     def add_user(self, user_id: int) -> None:
         try:
             self.cur.execute(f"""INSERT INTO users VALUES ({user_id}, 0, 1)""")
-        except Exception:
-            pass
+            logging.info("User added")
+        except Exception as ex:
+            logging.error(ex)
 
     # Добавляет юзера, если его нет в БД
     def add_user_if_not_exist(self, user_id: int) -> None:
@@ -46,8 +47,8 @@ class DataBase:
             req = self.cur.execute(f"""SELECT EXISTS(SELECT 1 FROM users WHERE id={user_id})""")
             if not bool(req.fetchone()[0]):
                 self.add_user(user_id)
-        except Exception:
-            pass
+        except Exception as ex:
+            logging.error(ex)
 
     # КОМАНДЫ ДЛЯ !dick
 
@@ -133,9 +134,10 @@ class DataBase:
                     for user in users:
                         attempts = self.get_user_value("attempts", user[0])
                         self.cur.execute(f"UPDATE users SET 'attempts' = {attempts + 1} WHERE id = {user[0]}")
+                logging.info("Attempts added")
                 self.git_push_db()
-        except Exception:
-            pass
+        except Exception as ex:
+            logging.error(ex)
 
     # Заливает базу данных на GitHub
     @staticmethod
@@ -146,8 +148,9 @@ class DataBase:
             repo.index.commit("database updated")
             origin = repo.remote()
             origin.push()
-        except Exception:
-            pass
+            logging.info("Database pushed to GitHub")
+        except Exception as ex:
+            logging.error(ex)
 
     @staticmethod
     # Возвращает "попытка" с правильным окончанием

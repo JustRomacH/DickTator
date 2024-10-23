@@ -1,8 +1,9 @@
+import logging
 from os import getenv
 from pathlib import Path
+from dotenv import load_dotenv
 from dataclasses import dataclass
 from datetime import timezone, timedelta
-from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -14,6 +15,16 @@ COMMANDS: dict = {
     "stalcraft": "скидывает лицо из Stalcraft",
     "gosdolg": "выводит госдолг США"
 }
+
+
+def setup_logging() -> None:
+    format_str = "[%(asctime)s] [%(levelname)s] %(message)s"
+    logging.basicConfig(
+        filename="dicktator.log",
+        format=format_str,
+        level=logging.INFO,
+        datefmt='%d-%m-%Y %H:%M'
+    )
 
 
 # Основные переменные бота
@@ -57,3 +68,6 @@ class ConfigVars:
 выдаёт числа от {MIN_DICK_DELTA} до {MAX_DICK_DELTA} см. За запуск
 Доты, Unturned и т.п. твой писюн
 уменьшается на {abs(PENALTY)} см."""
+
+
+setup_logging()

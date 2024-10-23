@@ -1,9 +1,10 @@
+import asyncio
 import requests
 from random import choice
 from bs4 import BeautifulSoup
 from database import DataBase
 from discord.ext import commands
-from config import ConfigVars, COMMANDS
+from config import *
 from discord import Intents, Member, Message
 from discord.ext.commands import Context, errors
 
@@ -17,6 +18,7 @@ class DickTator(commands.Bot):
     async def on_ready(self):
         await self.add_commands()
         self.add_funcs_info()
+        logging.info("Bot started...")
         await self.DB.add_attempts()
 
     # Добавляет информацию о функциях в HELP в config
@@ -91,11 +93,13 @@ class DickTator(commands.Bot):
                 await ctx.channel.send(
                     f"Госдолг США составляет {debt}"
                 )
+                logging.info("Got US Government Debt")
                 await ctx.channel.send(ConfigVars.US_DEBT_GIF)
-            except AttributeError:
+            except AttributeError as ex:
+                logging.warning(ex)
                 await ctx.channel.send("Произошла ошибка...")
-            except Exception:
-                pass
+            except Exception as ex:
+                logging.error(ex)
 
     # ИВЕНТЫ
 
@@ -124,9 +128,10 @@ class DickTator(commands.Bot):
                                 f"{after.mention}, {choice(ConfigVars.LEAVE_PHRASES)}"
                             )
                             answer = self.DB.change_dick_size(after.id, after.mention, ConfigVars.PENALTY)
+                            logging.info(f"{after.display_name} was punished for {cur_act}")
                             await channel.send(answer)
-        except Exception:
-            pass
+        except Exception as ex:
+            logging.error(ex)
 
     # Отлавливает ошибки команд
     async def on_command_error(self, context: Context, exception: errors.CommandError) -> None:
@@ -136,9 +141,14 @@ class DickTator(commands.Bot):
             )
 
 
-def main() -> None:
-    DickTator().run(ConfigVars.TOKEN, log_level=0)
+async def main() -> None:
+    await DickTator().start(ConfigVars.TOKEN)
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        logging.info("Bot disabled..")
+    except Exception as exc:
+        logging.error(exc)
