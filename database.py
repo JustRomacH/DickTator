@@ -145,7 +145,7 @@ class DataBase:
         try:
             repo = Repo(ConfigVars.GIT_REPO)
             repo.index.add(["dicktator.db"])
-            repo.index.commit("database updated")
+            repo.index.commit("db updated")
             origin = repo.remote()
             origin.push()
             logging.info("Database pushed to GitHub")
@@ -164,7 +164,7 @@ class DataBase:
 
 
 def main():
-    DataBase()
+    DataBase().git_push_db()
 
 
 if __name__ == "__main__":
