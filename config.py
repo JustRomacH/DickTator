@@ -33,7 +33,7 @@ class ConfigVars:
     TOKEN = getenv("TOKEN")
     PENALTY: int = -3
     ATTS_ADD_HOUR: int = 17
-    MIN_DICK_DELTA: int = -5
+    MIN_DICK_DELTA: int = 0
     MAX_DICK_DELTA: int = 10
     TIMEZONE: timezone = timezone(timedelta(hours=3))
     GIT_REPO: str = Path(__file__).parent.resolve().joinpath(".git")
