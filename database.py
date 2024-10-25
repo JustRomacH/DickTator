@@ -1,6 +1,5 @@
 import sqlite3
 import asyncio
-from git import Repo
 from config import *
 from random import randint
 from timer import get_time_delta
@@ -135,20 +134,6 @@ class DataBase:
                         attempts = self.get_user_value("attempts", user[0])
                         self.cur.execute(f"UPDATE users SET 'attempts' = {attempts + 1} WHERE id = {user[0]}")
                 logging.info("Attempts added")
-                self.git_push_db()
-        except Exception as ex:
-            logging.error(ex)
-
-    # Заливает базу данных на GitHub
-    @staticmethod
-    def git_push_db() -> None:
-        try:
-            repo = Repo(ConfigVars.GIT_REPO)
-            repo.index.add(["dicktator.db"])
-            repo.index.commit("db updated")
-            origin = repo.remote()
-            origin.push()
-            logging.info("Database pushed to GitHub")
         except Exception as ex:
             logging.error(ex)
 
@@ -164,7 +149,7 @@ class DataBase:
 
 
 def main():
-    DataBase().git_push_db()
+    DataBase()
 
 
 if __name__ == "__main__":
