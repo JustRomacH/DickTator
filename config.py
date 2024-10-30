@@ -31,7 +31,7 @@ def setup_logging() -> None:
 @dataclass
 class ConfigVars:
     TOKEN = getenv("TOKEN")
-    PENALTY: int = -3
+    PENALTY: int = -5
     ATTS_ADD_HOUR: int = 17
     MIN_DICK_DELTA: int = 0
     MAX_DICK_DELTA: int = 10
