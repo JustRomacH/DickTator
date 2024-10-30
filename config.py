@@ -29,8 +29,13 @@ def setup_logging() -> None:
 
 # Основные переменные бота
 @dataclass
-class ConfigVars:
+class Config:
     TOKEN = getenv("TOKEN")
+    HOST = getenv("HOST")
+    USER = getenv("USER")
+    PASSWORD = getenv("PASSWORD")
+    DATABASE = getenv("DATABASE")
+    TABLE = getenv("TABLE")
     PENALTY: int = -5
     ATTS_ADD_HOUR: int = 17
     MIN_DICK_DELTA: int = 0
