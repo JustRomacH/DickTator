@@ -1,13 +1,18 @@
-import sqlite3
 import asyncio
 from config import *
 from random import randint
 from timer import get_time_delta
+from mysql.connector import connect
 
 
 class DataBase:
     def __init__(self):
-        self.conn = sqlite3.connect("dicktator.db")
+        self.conn = connect(
+            host=Config.HOST,
+            user=Config.USER,
+            password=Config.PASSWORD,
+            database=Config.DATABASE
+        )
         self.conn.autocommit = True
         self.cur = self.conn.cursor()
 
@@ -15,27 +20,31 @@ class DataBase:
 
     # Возвращает выбранное значение по id
     def get_user_value(self, value: str, user_id: int) -> int:
-        req = self.cur.execute(f"""SELECT {value} FROM users WHERE id = {user_id}""")
-        return req.fetchone()[0]
+        query = f"SELECT {value} FROM {Config.TABLE} WHERE id = %s"
+        self.cur.execute(query, (user_id,))
+        return self.cur.fetchone()[0]
 
     # Возвращает выбранные значения всех юзеров
-    def get_values(self, value: str, order: str = None, reverse: bool = False) -> list[list[int]]:
-        req = f"SELECT {value} FROM users "
+    def get_values(self, value: str, order: str = None, reverse: bool = False) -> list[tuple]:
+        query = f"SELECT {value} FROM {Config.TABLE} "
         # Порядок сортировки
         if order:
-            req += f"ORDER BY {order} "
+            query += f"ORDER BY {order} "
             if reverse:
-                req += "DESC"
-        return self.cur.execute(req).fetchall()
+                query += "DESC"
+        self.cur.execute(query)
+        return self.cur.fetchall()
 
     # Изменяет выбранное значение у юзера
     def update_value(self, value: str, new_value: int, user_id: int) -> None:
-        self.cur.execute(f"""UPDATE users SET {value} = {new_value} WHERE id = {user_id}""")
+        query = f"""UPDATE {Config.TABLE} SET {value} = %s WHERE id = %s"""
+        self.cur.execute(query, (new_value, user_id))
 
     # Добавляет юзера в БД
     def add_user(self, user_id: int) -> None:
         try:
-            self.cur.execute(f"""INSERT INTO users VALUES ({user_id}, 0, 1)""")
+            query = f"""INSERT INTO {Config.TABLE} VALUES (%s, 0, 1)"""
+            self.cur.execute(query, (user_id,))
             logging.info("User added")
         except Exception as ex:
             logging.error(ex)
@@ -43,8 +52,9 @@ class DataBase:
     # Добавляет юзера, если его нет в БД
     def add_user_if_not_exist(self, user_id: int) -> None:
         try:
-            req = self.cur.execute(f"""SELECT EXISTS(SELECT 1 FROM users WHERE id={user_id})""")
-            if not bool(req.fetchone()[0]):
+            query = f"""SELECT EXISTS(SELECT 1 FROM {Config.TABLE} WHERE id=%s)"""
+            self.cur.execute(query, (user_id,))
+            if not bool(self.cur.fetchone()[0]):
                 self.add_user(user_id)
         except Exception as ex:
             logging.error(ex)
@@ -64,7 +74,7 @@ class DataBase:
         if attempts > 0:
             # Вычитает одну попытку
             self.update_value("attempts", attempts - 1, user_id)
-            delta = randint(ConfigVars.MIN_DICK_DELTA, ConfigVars.MAX_DICK_DELTA)
+            delta = randint(Config.MIN_DICK_DELTA, Config.MAX_DICK_DELTA)
             return self.change_dick_size(user_id, mention, delta)
         else:
             return self.get_dick_answer(user_id, mention, is_atts_were=False)
@@ -126,13 +136,13 @@ class DataBase:
         try:
             while True:
                 # Оставшееся время до добавления попыток
-                time_delta = get_time_delta(ConfigVars.ATTS_ADD_HOUR)
+                time_delta = get_time_delta(Config.ATTS_ADD_HOUR)
                 await asyncio.sleep(time_delta)
                 users = self.get_values("*")
                 if users:
                     for user in users:
                         attempts = self.get_user_value("attempts", user[0])
-                        self.cur.execute(f"UPDATE users SET 'attempts' = {attempts + 1} WHERE id = {user[0]}")
+                        self.cur.execute(f"UPDATE {Config.TABLE} SET 'attempts' = {attempts + 1} WHERE id = {user[0]}")
                 logging.info("Attempts added")
         except Exception as ex:
             logging.error(ex)
