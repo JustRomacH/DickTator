@@ -23,18 +23,18 @@ class DickTator(commands.Bot):
 
     # Добавляет информацию о функциях в HELP в config
     def add_funcs_info(self) -> None:
-        ConfigVars.HELP += "\n\nКоманды:"
+        Config.HELP += "\n\nКоманды:"
         for func in self.commands:
             name = func.name
             if not name == 'help':
-                ConfigVars.HELP += f"\n!{name} - {COMMANDS.get(name)}"
+                Config.HELP += f"\n!{name} - {COMMANDS.get(name)}"
 
-        ConfigVars.HELP += "\n\nАлиасы:"
+        Config.HELP += "\n\nАлиасы:"
         for func in self.commands:
             name = func.name
             if not name == 'help':
                 aliases: list = sorted(func.aliases, key=len)
-                ConfigVars.HELP += f"\n!{name} - {", ".join(aliases)}"
+                Config.HELP += f"\n!{name} - {", ".join(aliases)}"
 
     # КОМАНДЫ
 
@@ -44,13 +44,13 @@ class DickTator(commands.Bot):
         # Выводит информацию о боте
         @self.command(aliases=["i", "h", "inf", "info"])
         async def infa(ctx: commands.Context):
-            await ctx.channel.send(ConfigVars.HELP)
+            await ctx.channel.send(Config.HELP)
 
         # Скидывает лицо из Stalcraft
         @self.command(aliases=["sc", "face"])
         async def stalcraft(ctx: commands.Context) -> None:
             await ctx.message.delete()
-            await ctx.channel.send(ConfigVars.STALCRAFT_FACE)
+            await ctx.channel.send(Config.STALCRAFT_FACE)
 
         # Изменяет размер писюна на рандомное значение
         @self.command(aliases=["d", "p", "penis", "cock", "4len"])
@@ -86,7 +86,7 @@ class DickTator(commands.Bot):
         @self.command(aliases=["gd", "nd", "usa", "us", "dolg", "debt"])
         async def gosdolg(ctx: commands.Context) -> None:
             try:
-                req = requests.get(ConfigVars.US_DEBT_URL).content
+                req = requests.get(Config.US_DEBT_URL).content
                 html = BeautifulSoup(req, "html.parser")
                 div = html.find("div", {"class": "debt-gross"})
                 debt = div.find("span").text
@@ -94,7 +94,7 @@ class DickTator(commands.Bot):
                     f"Госдолг США составляет {debt}"
                 )
                 logging.info("Got US Government Debt")
-                await ctx.channel.send(ConfigVars.US_DEBT_GIF)
+                await ctx.channel.send(Config.US_DEBT_GIF)
             except AttributeError as ex:
                 logging.warning(ex)
                 await ctx.channel.send("Произошла ошибка...")
@@ -109,15 +109,15 @@ class DickTator(commands.Bot):
         if not message.author.bot:
             channel = message.channel
             # Отвечает лицом на лицо
-            if ConfigVars.STALCRAFT_FACE in message.content:
-                await channel.send(ConfigVars.STALCRAFT_FACE)
+            if Config.STALCRAFT_FACE in message.content:
+                await channel.send(Config.STALCRAFT_FACE)
         await self.process_commands(message)
 
     # Срабатывает при обновлении активности
     async def on_presence_update(self, before: Member, after: Member) -> None:
         try:
             channel = after.guild.text_channels[0]
-            for ban_act in ConfigVars.BANNED_ACT:
+            for ban_act in Config.BANNED_ACT:
                 # Если до этого была незапрещённая активность
                 if not any(ban_act in prev_act.name.lower() for prev_act in before.activities):
                     # Если у юзера запрещённая активность
@@ -125,9 +125,9 @@ class DickTator(commands.Bot):
                         if ban_act in cur_act.name.lower():
                             self.DB.add_user_if_not_exist(after.id)
                             await channel.send(
-                                f"{after.mention}, {choice(ConfigVars.LEAVE_PHRASES)}"
+                                f"{after.mention}, {choice(Config.LEAVE_PHRASES)}"
                             )
-                            answer = self.DB.change_dick_size(after.id, after.mention, ConfigVars.PENALTY)
+                            answer = self.DB.change_dick_size(after.id, after.mention, Config.PENALTY)
                             logging.info(f"{after.display_name} was punished for {cur_act.name}")
                             await channel.send(answer)
         except Exception as ex:
@@ -142,7 +142,7 @@ class DickTator(commands.Bot):
 
 
 async def main() -> None:
-    await DickTator().start(ConfigVars.TOKEN)
+    await DickTator().start(Config.TOKEN)
 
 
 if __name__ == "__main__":
