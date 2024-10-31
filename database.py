@@ -143,7 +143,7 @@ class DataBase:
                     for user in users:
                         user_id = user[0]
                         attempts = self.get_user_value("attempts", user_id)
-                        self.cur.execute(f"UPDATE {Config.TABLE} SET 'attempts' = {attempts + 1} WHERE id = {user_id}")
+                        self.cur.execute(f"UPDATE {Config.TABLE} SET attempts = {attempts + 1} WHERE id = {user_id}")
                     logging.info("Attempts added")
         except Exception as ex:
             logging.error(ex)
