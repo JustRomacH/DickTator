@@ -76,3 +76,4 @@ class Config:
 
 
 setup_logging()
+
