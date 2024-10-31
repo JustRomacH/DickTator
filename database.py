@@ -118,7 +118,7 @@ class DataBase:
     # Возвращает общий топ юзеров
     def get_top(self) -> list[[int, int, int]]:
         try:
-            users = self.get_values("*", "size", True)
+            users = self.get_values("id, size", "size", True)
         except Exception:
             users = list()
         return users
@@ -141,9 +141,10 @@ class DataBase:
                 users = self.get_values("*")
                 if users:
                     for user in users:
-                        attempts = self.get_user_value("attempts", user[0])
-                        self.cur.execute(f"UPDATE {Config.TABLE} SET 'attempts' = {attempts + 1} WHERE id = {user[0]}")
-                logging.info("Attempts added")
+                        user_id = user[0]
+                        attempts = self.get_user_value("attempts", user_id)
+                        self.cur.execute(f"UPDATE {Config.TABLE} SET 'attempts' = {attempts + 1} WHERE id = {user_id}")
+                    logging.info("Attempts added")
         except Exception as ex:
             logging.error(ex)
 
