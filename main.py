@@ -10,7 +10,7 @@ from discord.ext.commands import Context, errors
 
 
 class DickTator(commands.Bot):
-    def __init__(self, command_prefix="!", intents=Intents.all()):
+    def __init__(self, command_prefix=Config.PREFIX, intents=Intents.all()):
         super().__init__(command_prefix, intents=intents)
         self.DB = DataBase()
 

@@ -37,6 +37,7 @@ class Config:
     PASSWORD = getenv("PASSWORD")
     DATABASE = getenv("DATABASE")
     TABLE = getenv("TABLE")
+    PREFIX = "!"
     PENALTY: int = -5
     ATTS_ADD_HOUR: int = 17
     MIN_DICK_DELTA: int = 0
@@ -70,7 +71,7 @@ class Config:
 
     HELP: str = f"""Каждый день в {ATTS_ADD_HOUR}:00 всем выдаётся 
 1 попытка увеличить свой писюн. Для этого
-нужно использовать команду !dick. Рандом
+нужно использовать команду {PREFIX}dick. Рандом
 выдаёт числа от {MIN_DICK_DELTA} до {MAX_DICK_DELTA} см. За запуск
 Доты, Unturned и т.п. твой писюн
 уменьшается на {abs(PENALTY)} см."""
