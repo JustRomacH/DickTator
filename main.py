@@ -27,14 +27,14 @@ class DickTator(commands.Bot):
         for func in self.commands:
             name = func.name
             if not name == 'help':
-                Config.HELP += f"\n!{name} - {COMMANDS.get(name)}"
+                Config.HELP += f"\n{self.command_prefix}{name} - {COMMANDS.get(name)}"
 
         Config.HELP += "\n\nАлиасы:"
         for func in self.commands:
             name = func.name
             if not name == 'help':
-                aliases: list = sorted(func.aliases, key=len)
-                Config.HELP += f"\n!{name} - {", ".join(aliases)}"
+                aliases = sorted(func.aliases, key=len)
+                Config.HELP += f"\n{self.command_prefix}{name} - {", ".join(aliases)}"
 
     # КОМАНДЫ
 
