@@ -1,10 +1,10 @@
 import asyncio
 import requests
+from config import *
 from random import choice
 from bs4 import BeautifulSoup
 from database import DataBase
 from discord.ext import commands
-from config import *
 from discord import Intents, Member, Message
 from discord.ext.commands import Context, errors
 
