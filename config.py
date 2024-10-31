@@ -21,6 +21,7 @@ def setup_logging() -> None:
     format_str = "[%(asctime)s] [%(levelname)s] %(message)s"
     logging.basicConfig(
         filename="dicktator.log",
+        filemode="a",
         format=format_str,
         level=logging.INFO,
         datefmt='%d-%m-%Y %H:%M'
@@ -76,4 +77,3 @@ class Config:
 
 
 setup_logging()
-
