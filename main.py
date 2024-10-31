@@ -57,20 +57,19 @@ class DickTator(commands.Bot):
         async def dick(ctx: commands.Context) -> None:
             user_id = ctx.author.id
             mention = ctx.author.mention
-            answer = self.DB.dick_random(user_id, mention)
-            await ctx.channel.send(answer)
+            await ctx.channel.send(self.DB.dick_random(user_id, mention))
 
         # Выводит топ игроков
         @self.command(aliases=["s", "t", "top", "stat", "stas"])
         async def stats(ctx: commands.Context) -> None:
             users = self.DB.get_top()
             if users:
-                answer = "Топ игроков:"
+                resp = "Топ игроков:"
                 for i, user_inf in enumerate(users):
-                    answer += f"\n{i + 1}. {self.get_user(user_inf[0]).display_name} — {user_inf[1]} см"
+                    resp += f"\n{i + 1}. {self.get_user(user_inf[0]).display_name} — {user_inf[1]} см"
             else:
-                answer = "Похоже топ пустой..."
-            await ctx.channel.send(answer)
+                resp = "Похоже топ пустой..."
+            await ctx.channel.send(resp)
 
         # Выводит количество оставшихся попыток
         @self.command(aliases=["a", "att", "atts", "try", "tries"])
@@ -127,9 +126,9 @@ class DickTator(commands.Bot):
                             await channel.send(
                                 f"{after.mention}, {choice(Config.LEAVE_PHRASES)}"
                             )
-                            answer = self.DB.change_dick_size(after.id, after.mention, Config.PENALTY)
+                            resp = self.DB.change_dick_size(after.id, after.mention, Config.PENALTY)
+                            await channel.send(resp)
                             logging.info(f"{after.display_name} was punished for {cur_act.name}")
-                            await channel.send(answer)
         except Exception as ex:
             logging.error(ex)
 
