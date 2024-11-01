@@ -37,6 +37,7 @@ class Config:
     PASSWORD = getenv("PASSWORD")
     DATABASE = getenv("DATABASE")
     TABLE = getenv("TABLE")
+    CONN_CHECK_DELAY = 30
     PREFIX = "!"
     PENALTY: int = -5
     ATTS_ADD_HOUR: int = 17
