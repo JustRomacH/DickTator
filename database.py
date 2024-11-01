@@ -2,19 +2,47 @@ import asyncio
 from config import *
 from random import randint
 from timer import get_time_delta
-from mysql.connector import connect
+from mysql.connector import connect, Error as MySQLError
 
 
 class DataBase:
     def __init__(self):
-        self.conn = connect(
-            host=Config.HOST,
-            user=Config.USER,
-            password=Config.PASSWORD,
-            database=Config.DATABASE
-        )
-        self.conn.autocommit = True
-        self.cur = self.conn.cursor()
+        try:
+            self.conn = connect(
+                host=Config.HOST,
+                user=Config.USER,
+                password=Config.PASSWORD,
+                database=Config.DATABASE
+            )
+            self.conn.autocommit = True
+            self.cur = self.conn.cursor()
+            logging.info("Successfully connected to database")
+        except MySQLError as ex:
+            logging.error(ex)
+
+        asyncio.create_task(self.check_connection())
+
+    # Проверяет подключение и пытается переподключиться
+    async def check_connection(self) -> None:
+        errors = int()
+        while True:
+            if not self.conn.is_connected() and errors <= 5:
+                logging.info("Trying to reconnect")
+                try:
+                    self.conn = connect(
+                        host=Config.HOST,
+                        user=Config.USER,
+                        password=Config.PASSWORD,
+                        database=Config.DATABASE
+                    )
+                    self.conn.autocommit = True
+                    self.cur = self.conn.cursor()
+                    logging.info("Successfully reconnected to database")
+                    errors = 0
+                except MySQLError as ex:
+                    errors += 1
+                    logging.error(ex)
+            await asyncio.sleep(Config.CONN_CHECK_DELAY)
 
     # МЕТОДЫ ДЛЯ РАБОТЫ С БД
 
