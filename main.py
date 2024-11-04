@@ -126,7 +126,9 @@ class DickTator(commands.Bot):
                             await channel.send(
                                 f"{after.mention}, {choice(Config.LEAVE_PHRASES)}"
                             )
-                            resp = self.DB.change_dick_size(after.id, after.mention, Config.PENALTY)
+                            resp = self.DB.change_dick_size(
+                                after.id, after.mention, Config.PENALTY
+                            )
                             await channel.send(resp)
                             logging.info(f"{after.display_name} was punished for {cur_act.name}")
         except Exception as ex:
