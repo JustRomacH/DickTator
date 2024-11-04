@@ -18,17 +18,20 @@ class DataBase:
             self.cur = self.conn.cursor()
             logging.info("Successfully connected to database")
         except MySQLError as ex:
+            self.conn = None
+            self.cur = None
             logging.error(ex)
-
-        asyncio.create_task(self.check_connection())
+        if not __name__ == "__main__":
+            asyncio.create_task(self.check_connection())
+        else:
+            asyncio.run(self.check_connection())
 
     # Проверяет подключение и пытается переподключиться
     async def check_connection(self) -> None:
-        errors = int()
         while True:
-            if not self.conn.is_connected() and errors <= 5:
-                logging.info("Trying to reconnect")
-                try:
+            try:
+                if not self.conn.is_connected():
+                    logging.info("Trying to reconnect")
                     self.conn = connect(
                         host=Config.HOST,
                         user=Config.USER,
@@ -38,10 +41,8 @@ class DataBase:
                     self.conn.autocommit = True
                     self.cur = self.conn.cursor()
                     logging.info("Successfully reconnected to database")
-                    errors = 0
-                except MySQLError as ex:
-                    errors += 1
-                    logging.error(ex)
+            except MySQLError as ex:
+                logging.error(ex)
             await asyncio.sleep(Config.CONN_CHECK_DELAY)
 
     # МЕТОДЫ ДЛЯ РАБОТЫ С БД
