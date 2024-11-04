@@ -8,14 +8,7 @@ from mysql.connector import connect, Error as MySQLError
 class DataBase:
     def __init__(self):
         try:
-            self.conn = connect(
-                host=Config.HOST,
-                user=Config.USER,
-                password=Config.PASSWORD,
-                database=Config.DATABASE
-            )
-            self.conn.autocommit = True
-            self.cur = self.conn.cursor()
+            self.connect_to_db()
             logging.info("Successfully connected to database")
         except MySQLError as ex:
             self.conn = None
@@ -26,20 +19,23 @@ class DataBase:
         else:
             asyncio.run(self.check_connection())
 
+    def connect_to_db(self):
+        self.conn = connect(
+            host=Config.HOST,
+            user=Config.USER,
+            password=Config.PASSWORD,
+            database=Config.DATABASE
+        )
+        self.conn.autocommit = True
+        self.cur = self.conn.cursor()
+
     # Проверяет подключение и пытается переподключиться
     async def check_connection(self) -> None:
         while True:
             try:
                 if not self.conn.is_connected():
                     logging.info("Trying to reconnect")
-                    self.conn = connect(
-                        host=Config.HOST,
-                        user=Config.USER,
-                        password=Config.PASSWORD,
-                        database=Config.DATABASE
-                    )
-                    self.conn.autocommit = True
-                    self.cur = self.conn.cursor()
+                    self.connect_to_db()
                     logging.info("Successfully reconnected to database")
             except MySQLError as ex:
                 logging.error(ex)
