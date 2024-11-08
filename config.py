@@ -13,7 +13,8 @@ COMMANDS: dict = {
     "attempts": "выводит количество попыток",
     "stats": "выводит глобальный топ игроков",
     "stalcraft": "скидывает лицо из Stalcraft",
-    "gosdolg": "выводит госдолг США"
+    "gosdolg": "выводит госдолг США",
+    "place": "выводит место в топе"
 }
 
 
@@ -31,15 +32,14 @@ def setup_logging() -> None:
 # Основные переменные бота
 @dataclass
 class Config:
+    PREFIX = "!"
     TOKEN = getenv("TOKEN")
     HOST = getenv("HOST")
     USER = getenv("USER")
     PASSWORD = getenv("PASSWORD")
     DATABASE = getenv("DATABASE")
-    TABLE = getenv("TABLE")
-    CONN_CHECK_DELAY = 30
-    PREFIX = "!"
-    PENALTY: int = -5
+    CONN_RETRY_DELAY = 30
+    DICK_PENALTY: int = -5
     ATTS_ADD_HOUR: int = 17
     MIN_DICK_DELTA: int = 0
     MAX_DICK_DELTA: int = 10
@@ -75,7 +75,7 @@ class Config:
 нужно использовать команду {PREFIX}dick. Рандом
 выдаёт числа от {MIN_DICK_DELTA} до {MAX_DICK_DELTA} см. За запуск
 Доты, Unturned и т.п. твой писюн
-уменьшается на {abs(PENALTY)} см."""
+уменьшается на {abs(DICK_PENALTY)} см."""
 
 
 setup_logging()
