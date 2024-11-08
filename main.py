@@ -3,7 +3,7 @@ import requests
 from config import *
 from random import choice
 from bs4 import BeautifulSoup
-from database import DataBase
+from database import Users
 from discord.ext import commands
 from discord import Intents, Member, Message
 from discord.ext.commands import Context, errors
@@ -12,29 +12,32 @@ from discord.ext.commands import Context, errors
 class DickTator(commands.Bot):
     def __init__(self, command_prefix=Config.PREFIX, intents=Intents.all()):
         super().__init__(command_prefix, intents=intents)
-        self.DB = DataBase()
+        self.USERS = Users(
+            Config.HOST,
+            Config.USER,
+            Config.PASSWORD,
+            Config.DATABASE
+        )
 
     # Срабатывает при запуске бота
     async def on_ready(self):
         await self.add_commands()
         self.add_funcs_info()
         logging.info("Bot started...")
-        await self.DB.add_attempts()
+        await self.USERS.add_attempts()
 
     # Добавляет информацию о функциях в HELP в config
     def add_funcs_info(self) -> None:
         Config.HELP += "\n\nКоманды:"
         for func in self.commands:
-            name = func.name
-            if not name == 'help':
-                Config.HELP += f"\n{self.command_prefix}{name} - {COMMANDS.get(name)}"
+            if not func.name == 'help':
+                Config.HELP += f"\n{self.command_prefix}{func.name} - {COMMANDS.get(func.name)}"
 
         Config.HELP += "\n\nАлиасы:"
         for func in self.commands:
-            name = func.name
-            if not name == 'help':
+            if not func.name == 'help':
                 aliases = sorted(func.aliases, key=len)
-                Config.HELP += f"\n{self.command_prefix}{name} - {", ".join(aliases)}"
+                Config.HELP += f"\n{self.command_prefix}{func.name} - {", ".join(aliases)}"
 
     # КОМАНДЫ
 
@@ -53,16 +56,17 @@ class DickTator(commands.Bot):
             await ctx.channel.send(Config.STALCRAFT_FACE)
 
         # Изменяет размер писюна на рандомное значение
-        @self.command(aliases=["d", "p", "penis", "cock", "4len"])
+        @self.command(aliases=["d", "penis", "cock", "4len"])
         async def dick(ctx: commands.Context) -> None:
             user_id = ctx.author.id
             mention = ctx.author.mention
-            await ctx.channel.send(self.DB.dick_random(user_id, mention))
+            resp = self.USERS.dick_random(user_id, mention)
+            await ctx.channel.send(resp)
 
         # Выводит топ игроков
         @self.command(aliases=["s", "t", "top", "stat", "stas"])
         async def stats(ctx: commands.Context) -> None:
-            users = self.DB.get_top()
+            users = self.USERS.get_top()
             if users:
                 resp = "Топ игроков:"
                 for i, user_inf in enumerate(users):
@@ -71,13 +75,25 @@ class DickTator(commands.Bot):
                 resp = "Похоже топ пустой..."
             await ctx.channel.send(resp)
 
+        # Выводит место в топе
+        @self.command(aliases=["p", "n", "num", "number"])
+        async def place(ctx: commands.Context) -> None:
+            try:
+                user_id = ctx.author.id
+                mention = ctx.author.mention
+                await ctx.channel.send(
+                    f"{mention}, ты занимаешь {self.USERS.get_place_in_top(user_id)} место в топе"
+                )
+            except Exception:
+                await ctx.channel.send("Что-то пошло не так...")
+
         # Выводит количество оставшихся попыток
         @self.command(aliases=["a", "att", "atts", "try", "tries"])
         async def attempts(ctx: commands.Context) -> None:
             try:
                 user_id = ctx.author.id
                 mention = ctx.author.mention
-                await ctx.channel.send(f"{mention}, {self.DB.get_attempts(user_id).lower()}")
+                await ctx.channel.send(f"{mention}, {self.USERS.get_attempts(user_id).lower()}")
             except Exception:
                 await ctx.channel.send("Что-то пошло не так...")
 
@@ -122,12 +138,12 @@ class DickTator(commands.Bot):
                     # Если у юзера запрещённая активность
                     for cur_act in after.activities:
                         if ban_act in cur_act.name.lower():
-                            self.DB.add_user_if_not_exist(after.id)
+                            self.USERS.add_user_if_not_exist(after.id)
                             await channel.send(
                                 f"{after.mention}, {choice(Config.LEAVE_PHRASES)}"
                             )
-                            resp = self.DB.change_dick_size(
-                                after.id, after.mention, Config.PENALTY
+                            resp = self.USERS.change_dick_size(
+                                after.id, after.mention, Config.DICK_PENALTY
                             )
                             await channel.send(resp)
                             logging.info(f"{after.display_name} was punished for {cur_act.name}")
