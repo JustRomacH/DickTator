@@ -6,7 +6,13 @@ from mysql.connector import connect, Error as MySQLError
 
 
 class DataBase:
-    def __init__(self):
+    def __init__(
+            self, host: str, user: str, password: str, database: str
+    ) -> None:
+        self.HOST = host
+        self.USER = user
+        self.PASSWORD = password
+        self.DATABASE = database
         try:
             self.connect_to_db()
             logging.info("Successfully connected to database")
@@ -14,23 +20,25 @@ class DataBase:
             self.conn = None
             self.cur = None
             logging.error(ex)
-        if not __name__ == "__main__":
-            asyncio.create_task(self.check_connection())
-        else:
-            asyncio.run(self.check_connection())
+        finally:
+            if __name__ == "__main__":
+                asyncio.run(self.reconnect_on_error())
+            else:
+                asyncio.create_task(self.reconnect_on_error())
 
+    # Подключение к базе данных
     def connect_to_db(self):
         self.conn = connect(
-            host=Config.HOST,
-            user=Config.USER,
-            password=Config.PASSWORD,
-            database=Config.DATABASE
+            host=self.HOST,
+            user=self.USER,
+            password=self.PASSWORD,
+            database=self.DATABASE
         )
         self.conn.autocommit = True
         self.cur = self.conn.cursor()
 
     # Проверяет подключение и пытается переподключиться
-    async def check_connection(self) -> None:
+    async def reconnect_on_error(self) -> None:
         while True:
             try:
                 if not self.conn.is_connected():
@@ -39,19 +47,29 @@ class DataBase:
                     logging.info("Successfully reconnected to database")
             except MySQLError as ex:
                 logging.error(ex)
-            await asyncio.sleep(Config.CONN_CHECK_DELAY)
+            await asyncio.sleep(Config.CONN_RETRY_DELAY)
 
-    # МЕТОДЫ ДЛЯ РАБОТЫ С БД
+
+class Table(DataBase):
+    def __init__(
+            self, host: str, user: str, password: str, database: str, table: str
+    ) -> None:
+        super().__init__(host, user, password, database)
+        self.TABLE = table
+
+    # МЕТОДЫ ДЛЯ РАБОТЫ С ТАБЛИЦЕЙ
 
     # Возвращает выбранное значение по id
-    def get_user_value(self, value: str, user_id: int) -> int:
-        query = f"SELECT {value} FROM {Config.TABLE} WHERE id = %s"
-        self.cur.execute(query, (user_id,))
+    def get_value(self, value: str, cond: str, cond_value: any) -> int:
+        query = f"SELECT {value} FROM {self.TABLE} WHERE {cond} = %s"
+        self.cur.execute(query, (cond_value,))
         return self.cur.fetchone()[0]
 
     # Возвращает выбранные значения всех юзеров
-    def get_values(self, value: str, order: str = None, reverse: bool = False) -> list[tuple]:
-        query = f"SELECT {value} FROM {Config.TABLE} "
+    def get_values(
+            self, value: str, order: str = None, reverse: bool = False
+    ) -> list[tuple]:
+        query = f"SELECT {value} FROM {self.TABLE} "
         # Порядок сортировки
         if order:
             query += f"ORDER BY {order} "
@@ -61,84 +79,98 @@ class DataBase:
         return self.cur.fetchall()
 
     # Изменяет выбранное значение у юзера
-    def update_value(self, value: str, new_value: int, user_id: int) -> None:
-        query = f"""UPDATE {Config.TABLE} SET {value} = %s WHERE id = %s"""
-        self.cur.execute(query, (new_value, user_id))
+    def update_value(
+            self, value: str, new_value: int, cond: str, cond_value: any
+    ) -> None:
+        query = f"""UPDATE {self.TABLE} SET {value} = %s WHERE {cond} = %s"""
+        self.cur.execute(query, (new_value, cond_value))
 
-    # Добавляет юзера в БД
+
+class Users(Table):
+    def __init__(
+            self, host: str, user: str, password: str, database: str
+    ) -> None:
+        super().__init__(host, user, password, database, "users")
+
+    # Добавляет юзера в таблицу
     def add_user(self, user_id: int) -> None:
         try:
-            query = f"""INSERT INTO {Config.TABLE} VALUES (%s, 0, 1)"""
+            query = f"INSERT INTO {self.TABLE} VALUES (%s, 0, 1)"
             self.cur.execute(query, (user_id,))
             logging.info("User added")
         except Exception as ex:
             logging.error(ex)
 
-    # Добавляет юзера, если его нет в БД
+    # Добавляет юзера, если его нет в таблице
     def add_user_if_not_exist(self, user_id: int) -> None:
         try:
-            query = f"""SELECT EXISTS(SELECT 1 FROM {Config.TABLE} WHERE id=%s)"""
+            query = f"SELECT EXISTS(SELECT 1 FROM {self.TABLE} WHERE id=%s)"
             self.cur.execute(query, (user_id,))
             if not bool(self.cur.fetchone()[0]):
                 self.add_user(user_id)
         except Exception as ex:
             logging.error(ex)
 
-    # КОМАНДЫ ДЛЯ !dick
+    # ФУНКЦИИ ДЛЯ !dick
 
     # Изменяет размер писюна на delta см
-    def change_dick_size(self, user_id: int, mention: str, delta: int, is_penalty: bool = False) -> str:
-        user_size = self.get_user_value("size", user_id)
-        self.update_value("size", user_size + delta, user_id)
-        return self.get_dick_answer(user_id, mention, delta, is_penalty)
+    def change_dick_size(
+            self, user_id: int, mention: str, delta: int, is_penalty: bool = False
+    ) -> str:
+        user_size = self.get_value("size", "id", user_id)
+        self.update_value("size", user_size + delta, "id", user_id)
+        return self.get_dick_response(user_id, mention, delta, is_penalty)
 
     # Изменяет размер писюна на случайное число см
     def dick_random(self, user_id: int, mention: str) -> str:
         self.add_user_if_not_exist(user_id)
-        attempts = self.get_user_value("attempts", user_id)
+        attempts = self.get_value("attempts", "id", user_id)
         if attempts > 0:
             # Вычитает одну попытку
-            self.update_value("attempts", attempts - 1, user_id)
+            self.update_value("attempts", attempts - 1, "id", user_id)
             delta = randint(Config.MIN_DICK_DELTA, Config.MAX_DICK_DELTA)
             return self.change_dick_size(user_id, mention, delta)
         else:
-            return self.get_dick_answer(user_id, mention, is_atts_were=False)
+            return self.get_dick_response(user_id, mention, is_atts_were=False)
 
     # Возвращает текст, которым ответит бот
-    def get_dick_answer(self, user_id: int, mention: str, delta: int = 0, is_penalty: bool = False,
-                        is_atts_were: bool = True) -> str:
-        user_size = self.get_user_value("size", user_id)
+    def get_dick_response(
+            self, user_id: int, mention: str, delta: int = 0, is_penalty: bool = False,
+            is_atts_were: bool = True
+    ) -> str:
+        user_size = self.get_value("size", "id", user_id)
         top_place = self.get_place_in_top(user_id)
-        answer = f"{mention}, "
-        if is_atts_were:
+        resp = f"{mention}, "
+        if is_atts_were:  # Если до вызова функции у юзера оставались попытки
             if delta > 0:
-                answer += f"твой писюн вырос на {delta} см."
+                resp += f"твой писюн вырос на {delta} см."
             elif delta < 0:
-                answer += f"твой писюн уменьшился на {abs(delta)} см."
+                resp += f"твой писюн уменьшился на {abs(delta)} см."
             else:
-                answer += f"твой писюн не изменился."
-            answer += f"\nТеперь он равен {user_size} см.\nТы занимаешь {top_place} место в топе."
+                resp += f"твой писюн не изменился."
+            resp += (f"\nТеперь он равен {user_size} см."
+                     f"\nТы занимаешь {top_place} место в топе.")
         else:
-            answer += f"у тебя не осталось попыток."
-            answer += f"\nСейчас твой писюн равен {user_size} см.\nТы занимаешь {top_place} место в топе."
+            resp += (f"у тебя не осталось попыток."
+                     f"\nСейчас твой писюн равен {user_size} см."
+                     f"\nТы занимаешь {top_place} место в топе.")
         if not is_penalty:
-            answer += "\n" + self.get_attempts(user_id)
-        return answer
+            resp += "\n" + self.get_attempts(user_id)
+        return resp
 
     # КОМАНДЫ БОТА
 
     # Возвращает количество оставшихся попыток у юзера
     def get_attempts(self, user_id: int) -> str:
         self.add_user_if_not_exist(user_id)
-        attempts = self.get_user_value("attempts", user_id)
-        match attempts:
-            case 0:
-                answer = f"У тебя не осталось попыток"
-            case 1:
-                answer = f"У тебя осталась 1 попытка"
-            case _:
-                answer = f"У тебя осталось {attempts} {self.get_atts_ending(attempts)}"
-        return answer
+        attempts = self.get_value("attempts", "id", user_id)
+        word_forms = self.get_words_right_form(attempts)
+        left_form = word_forms[0]
+        attempts_form = word_forms[1]
+        if attempts == 0:
+            return f"У тебя не осталось попыток"
+        else:
+            return f"У тебя {left_form} {attempts} {attempts_form}"
 
     # Возвращает общий топ юзеров
     def get_top(self) -> list[[int, int, int]]:
@@ -167,25 +199,31 @@ class DataBase:
                 if users:
                     for user in users:
                         user_id = user[0]
-                        attempts = self.get_user_value("attempts", user_id)
-                        self.cur.execute(f"UPDATE {Config.TABLE} SET attempts = {attempts + 1} WHERE id = {user_id}")
-                    logging.info("Attempts added")
+                        attempts = self.get_value("attempts", "id", user_id)
+                        query = f"UPDATE {self.TABLE} SET attempts = {attempts + 1} WHERE id = {user_id}"
+                        self.cur.execute(query)
+                        logging.info("Attempts added")
         except Exception as ex:
             logging.error(ex)
 
-    @staticmethod
     # Возвращает "попытка" с правильным окончанием
-    def get_atts_ending(num: int | float) -> str:
+    @staticmethod
+    def get_words_right_form(num: int | float) -> tuple[str, str]:
         if num == 1:
-            return "попытка"
+            return "осталась", "попытка"
         elif num in (2, 3, 4):
-            return "попытки"
+            return "осталось", "попытки"
         else:
-            return "попыток"
+            return "осталось", "попыток"
 
 
 def main():
-    DataBase()
+    DataBase(
+        Config.HOST,
+        Config.USER,
+        Config.PASSWORD,
+        Config.DATABASE
+    )
 
 
 if __name__ == "__main__":
