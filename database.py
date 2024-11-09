@@ -115,11 +115,11 @@ class Users(Table):
 
     # Изменяет размер писюна на delta см
     def change_dick_size(
-            self, user_id: int, mention: str, delta: int, is_penalty: bool = False
+            self, user_id: int, mention: str, delta: int,
     ) -> str:
         user_size = self.get_value("size", "id", user_id)
         self.update_value("size", user_size + delta, "id", user_id)
-        return self.get_dick_response(user_id, mention, delta, is_penalty)
+        return self.get_dick_resp(user_id, mention, delta)
 
     # Изменяет размер писюна на случайное число см
     def dick_random(self, user_id: int, mention: str) -> str:
@@ -131,39 +131,30 @@ class Users(Table):
             delta = randint(Config.MIN_DICK_DELTA, Config.MAX_DICK_DELTA)
             return self.change_dick_size(user_id, mention, delta)
         else:
-            return self.get_dick_response(user_id, mention, is_atts_were=False)
+            return self.get_dick_resp(user_id, mention, is_atts_were=False)
 
     # Возвращает текст, которым ответит бот
-    def get_dick_response(
-            self, user_id: int, mention: str, delta: int = 0, is_penalty: bool = False,
-            is_atts_were: bool = True
+    def get_dick_resp(
+            self, user_id: int, mention: str, delta: int = 0, is_atts_were: bool = True
     ) -> str:
         user_size = self.get_value("size", "id", user_id)
         top_place = self.get_place_in_top(user_id)
-        resp = f"{mention}, "
         if is_atts_were:  # Если до вызова функции у юзера оставались попытки
-            if delta > 0:
-                resp += f"твой писюн вырос на {delta} см."
-            elif delta < 0:
-                resp += f"твой писюн уменьшился на {abs(delta)} см."
-            else:
-                resp += f"твой писюн не изменился."
-            resp += (f"\nТеперь он равен {user_size} см."
-                     f"\nТы занимаешь {top_place} место в топе.")
+            resp = (f"{mention}, {self.get_change_resp(delta)}"
+                    f"\nТеперь он равен {user_size} см."
+                    f"\nТы занимаешь {top_place} место в топе."
+                    "\n" + self.get_attempts_resp(user_id))
         else:
-            resp += (f"у тебя не осталось попыток."
-                     f"\nСейчас твой писюн равен {user_size} см."
-                     f"\nТы занимаешь {top_place} место в топе.")
-        if not is_penalty:
-            resp += "\n" + self.get_attempts(user_id)
+            resp = (f"{mention}, у тебя не осталось попыток."
+                    f"\nСейчас твой писюн равен {user_size} см."
+                    f"\nТы занимаешь {top_place} место в топе.")
         return resp
 
     # КОМАНДЫ БОТА
 
-    # Возвращает количество оставшихся попыток у юзера
-    def get_attempts(self, user_id: int) -> str:
-        self.add_user_if_not_exist(user_id)
-        attempts = self.get_value("attempts", "id", user_id)
+    # Возвращает текст с количеством попыток
+    def get_attempts_resp(self, user_id: int) -> str:
+        attempts = self.get_attempts(user_id)
         word_forms = self.get_words_right_form(attempts)
         left_form = word_forms[0]
         attempts_form = word_forms[1]
@@ -180,13 +171,18 @@ class Users(Table):
             users = list()
         return users
 
+    # ДРУГИЕ ФУНКЦИИ
+
+    # Возвращает количество оставшихся попыток у юзера
+    def get_attempts(self, user_id: int) -> int:
+        self.add_user_if_not_exist(user_id)
+        return self.get_value("attempts", "id", user_id)
+
     # Возвращает позицию юзера в общем топе
     def get_place_in_top(self, user_id: int) -> int:
         for i, user_inf in enumerate(self.get_top()):
             if user_id in user_inf:
                 return i + 1
-
-    # ДРУГИЕ ФУНКЦИИ
 
     # Добавляет 1 попытку всем юзерам каждый день
     async def add_attempts(self) -> None:
@@ -195,7 +191,7 @@ class Users(Table):
                 # Оставшееся время до добавления попыток
                 time_delta = get_time_delta(Config.ATTS_ADD_HOUR)
                 await asyncio.sleep(time_delta)
-                users = self.get_values("*")
+                users = self.get_values("id")
                 if users:
                     for user in users:
                         user_id = user[0]
@@ -206,7 +202,16 @@ class Users(Table):
         except Exception as ex:
             logging.error(ex)
 
-    # Возвращает "попытка" с правильным окончанием
+    @staticmethod
+    def get_change_resp(delta: int) -> str:
+        if delta > 0:
+            return f"твой писюн вырос на {delta} см."
+        elif delta < 0:
+            return f"твой писюн уменьшился на {abs(delta)} см."
+        else:
+            return f"твой писюн не изменился."
+
+    # Возвращает слова с правильными окончаниями
     @staticmethod
     def get_words_right_form(num: int | float) -> tuple[str, str]:
         if num == 1:
