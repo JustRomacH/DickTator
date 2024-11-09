@@ -45,8 +45,8 @@ class DickTator(commands.Bot):
     async def add_commands(self) -> None:
 
         # Выводит информацию о боте
-        @self.command(aliases=["i", "h", "inf", "info"])
-        async def infa(ctx: commands.Context):
+        @self.command(aliases=["i", "h", "inf", "infa"])
+        async def info(ctx: commands.Context):
             await ctx.channel.send(Config.HELP)
 
         # Скидывает лицо из Stalcraft
@@ -64,8 +64,8 @@ class DickTator(commands.Bot):
             await ctx.channel.send(resp)
 
         # Выводит топ игроков
-        @self.command(aliases=["s", "t", "top", "stat", "stas"])
-        async def stats(ctx: commands.Context) -> None:
+        @self.command(aliases=["s", "t", "stats", "stat", "stas"])
+        async def top(ctx: commands.Context) -> None:
             users = self.USERS.get_top()
             if users:
                 resp = "Топ игроков:"

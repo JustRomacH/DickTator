@@ -8,10 +8,10 @@ from datetime import timezone, timedelta
 load_dotenv()
 
 COMMANDS: dict = {
-    "infa": "выводит это сообщение",
+    "info": "выводит это сообщение",
     "dick": "изменяет размер писюна",
     "attempts": "выводит количество попыток",
-    "stats": "выводит глобальный топ игроков",
+    "top": "выводит глобальный топ игроков",
     "stalcraft": "скидывает лицо из Stalcraft",
     "gosdolg": "выводит госдолг США",
     "place": "выводит место в топе"
