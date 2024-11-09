@@ -93,7 +93,7 @@ class DickTator(commands.Bot):
             try:
                 user_id = ctx.author.id
                 mention = ctx.author.mention
-                await ctx.channel.send(f"{mention}, {self.USERS.get_attempts(user_id).lower()}")
+                await ctx.channel.send(f"{mention}, {self.USERS.get_attempts_resp(user_id).lower()}")
             except Exception:
                 await ctx.channel.send("Что-то пошло не так...")
 
@@ -142,9 +142,7 @@ class DickTator(commands.Bot):
                             await channel.send(
                                 f"{after.mention}, {choice(Config.LEAVE_PHRASES)}"
                             )
-                            resp = self.USERS.change_dick_size(
-                                after.id, after.mention, Config.DICK_PENALTY
-                            )
+                            resp = self.USERS.change_dick_size(after.id, after.mention, Config.DICK_PENALTY)
                             await channel.send(resp)
                             logging.info(f"{after.display_name} was punished for {cur_act.name}")
         except Exception as ex:
