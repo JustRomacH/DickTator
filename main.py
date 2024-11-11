@@ -28,16 +28,21 @@ class DickTator(commands.Bot):
 
     # Добавляет информацию о функциях в HELP в config
     def add_funcs_info(self) -> None:
-        Config.HELP += "\n\nКоманды:"
-        for func in self.commands:
-            if not func.name == 'help':
-                Config.HELP += f"\n{self.command_prefix}{func.name} - {COMMANDS.get(func.name)}"
+        commands_list = list()
+        aliases_list = list()
 
-        Config.HELP += "\n\nАлиасы:"
         for func in self.commands:
             if not func.name == 'help':
+                commands_str = f"\n{self.command_prefix}{func.name} - {COMMANDS.get(func.name)}"
+                commands_list.append(commands_str)
                 aliases = sorted(func.aliases, key=len)
-                Config.HELP += f"\n{self.command_prefix}{func.name} - {", ".join(aliases)}"
+                aliases_str = f"\n{self.command_prefix}{func.name} - {", ".join(aliases)}"
+                aliases_list.append(aliases_str)
+
+        Config.HELP += ("\n\nКоманды:\n"
+                        '\n'.join(commands_list))
+        Config.HELP += ("\n\nАлиасы:\n"
+                        "\n".join(aliases_list))
 
     # КОМАНДЫ
 
@@ -70,7 +75,9 @@ class DickTator(commands.Bot):
             if users:
                 resp = "Топ игроков:"
                 for i, user_inf in enumerate(users):
-                    resp += f"\n{i + 1}. {self.get_user(user_inf[0]).display_name} — {user_inf[1]} см"
+                    user_name = self.get_user(user_inf[0]).display_name
+                    user_size = user_inf[1]
+                    resp += f"\n{i + 1}. {user_name} — {user_size} см"
             else:
                 resp = "Похоже топ пустой..."
             await ctx.channel.send(resp)
@@ -93,7 +100,8 @@ class DickTator(commands.Bot):
             try:
                 user_id = ctx.author.id
                 mention = ctx.author.mention
-                await ctx.channel.send(f"{mention}, {self.USERS.get_attempts_resp(user_id).lower()}")
+                attempts_resp = self.USERS.get_attempts_resp(user_id)
+                await ctx.channel.send(f"{mention}, {attempts_resp.lower()}")
             except Exception:
                 await ctx.channel.send("Что-то пошло не так...")
 
