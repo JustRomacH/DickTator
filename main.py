@@ -39,10 +39,10 @@ class DickTator(commands.Bot):
                 aliases_str = f"\n{self.command_prefix}{func.name} - {", ".join(aliases)}"
                 aliases_list.append(aliases_str)
 
-        Config.HELP += ("\n\nКоманды:\n"
-                        '\n'.join(commands_list))
-        Config.HELP += ("\n\nАлиасы:\n"
-                        "\n".join(aliases_list))
+        Config.HELP += ("\n\nКоманды:"
+                        + str().join(commands_list)
+                        + "\n\nАлиасы:"
+                        + str().join(aliases_list))
 
     # КОМАНДЫ
 
