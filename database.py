@@ -196,9 +196,9 @@ class Users(Table):
                     for user in users:
                         user_id = user[0]
                         attempts = self.get_value("attempts", "id", user_id)
-                        query = f"UPDATE {self.TABLE} SET attempts = {attempts + 1} WHERE id = {user_id}"
-                        self.cur.execute(query)
-                        logging.info("Attempts added")
+                        query = f"UPDATE {self.TABLE} SET attempts = %s WHERE id = %s"
+                        self.cur.execute(query, (attempts + 1, user_id))
+                    logging.info("Attempts added")
         except Exception as ex:
             logging.error(ex)
 
