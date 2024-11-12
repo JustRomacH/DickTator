@@ -1,7 +1,8 @@
 import asyncio
 from config import *
+from config import Config
 from random import randint
-from timer import get_time_delta
+from datetime import datetime, timedelta
 from mysql.connector import connect, Error as MySQLError
 
 
@@ -189,7 +190,7 @@ class Users(Table):
         try:
             while True:
                 # Оставшееся время до добавления попыток
-                time_delta = get_time_delta(Config.ATTS_ADD_HOUR)
+                time_delta = self.get_time_delta(Config.ATTS_ADD_HOUR)
                 await asyncio.sleep(time_delta)
                 users = self.get_values("id")
                 if users:
@@ -201,6 +202,23 @@ class Users(Table):
                     logging.info("Attempts added")
         except Exception as ex:
             logging.error(ex)
+
+    # Возвращает кол-во секунд до времени добавления попыток
+    @staticmethod
+    def get_time_delta(hour: int) -> float:
+        cur_time = datetime.today().astimezone(Config.TIMEZONE)
+        next_time = cur_time.replace(
+            day=cur_time.day,
+            hour=hour,
+            minute=0,
+            second=0,
+            microsecond=0,
+            tzinfo=Config.TIMEZONE
+        )
+        if cur_time > next_time:
+            next_time += timedelta(days=1)
+        delta_time = (next_time - cur_time).total_seconds()
+        return delta_time
 
     @staticmethod
     def get_change_resp(delta: int) -> str:
