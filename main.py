@@ -133,11 +133,16 @@ class DickTator(commands.Bot):
 
     # Срабатывает на любое сообщение
     async def on_message(self, message: Message) -> None:
-        if (message.author.bot and  # Отсеивает сообщения себя и других ботов
-                not Config.STALCRAFT_FACE in message.content):  # Проверка на лицо в сообщении
-            await self.process_commands(message)
+        # Отсеивает сообщения себя и других ботов
+        if message.author.bot:
+            return
+
         # Отвечает лицом на лицо
-        await message.channel.send(Config.STALCRAFT_FACE)
+        if Config.STALCRAFT_FACE in message.content:
+            await message.channel.send(Config.STALCRAFT_FACE)
+            return
+
+        await self.process_commands(message)
 
     async def on_presence_update(self, before: Member, after: Member) -> None:
         try:
