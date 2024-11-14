@@ -3,7 +3,7 @@ from config import *
 from config import Config
 from random import randint
 from datetime import datetime, timedelta
-from mysql.connector import connect, Error as MySQLError
+from mysql.connector import connect
 
 
 class DataBase:
@@ -14,13 +14,16 @@ class DataBase:
         self.USER = user
         self.PASSWORD = password
         self.DATABASE = database
+        self.conn = None
+        self.cursor = None
+
         try:
             self.connect_to_db()
             logging.info("Successfully connected to database")
-        except MySQLError as ex:
-            self.conn = None
-            self.cur = None
+
+        except Exception as ex:
             logging.error(ex)
+
         finally:
             if __name__ == "__main__":
                 asyncio.run(self.reconnect_on_error())
@@ -36,7 +39,7 @@ class DataBase:
             database=self.DATABASE
         )
         self.conn.autocommit = True
-        self.cur = self.conn.cursor()
+        self.cursor = self.conn.cursor()
 
     # Проверяет подключение и пытается переподключиться
     async def reconnect_on_error(self) -> None:
@@ -46,9 +49,12 @@ class DataBase:
                     logging.info("Trying to reconnect")
                     self.connect_to_db()
                     logging.info("Successfully reconnected to database")
-            except MySQLError as ex:
+
+            except Exception as ex:
                 logging.error(ex)
-            await asyncio.sleep(Config.CONN_RETRY_DELAY)
+
+            finally:
+                await asyncio.sleep(Config.CONN_RETRY_DELAY)
 
 
 class Table(DataBase):
@@ -63,28 +69,28 @@ class Table(DataBase):
     # Возвращает выбранное значение по id
     def get_value(self, value: str, cond: str, cond_value: any) -> int:
         query = f"SELECT {value} FROM {self.TABLE} WHERE {cond} = %s"
-        self.cur.execute(query, (cond_value,))
-        return self.cur.fetchone()[0]
+        self.cursor.execute(query, (cond_value,))
+        return self.cursor.fetchone()[0]
 
     # Возвращает выбранные значения всех юзеров
     def get_values(
             self, value: str, order: str = None, reverse: bool = False
-    ) -> list[tuple]:
-        query = f"SELECT {value} FROM {self.TABLE} "
+    ) -> list[any]:
+        query = f"SELECT {value} FROM {self.TABLE}"
         # Порядок сортировки
         if order:
-            query += f"ORDER BY {order} "
+            query += f" ORDER BY {order}"
             if reverse:
-                query += "DESC"
-        self.cur.execute(query)
-        return self.cur.fetchall()
+                query += " DESC"
+        self.cursor.execute(query)
+        return self.cursor.fetchall()
 
     # Изменяет выбранное значение у юзера
     def update_value(
             self, value: str, new_value: int, cond: str, cond_value: any
     ) -> None:
-        query = f"""UPDATE {self.TABLE} SET {value} = %s WHERE {cond} = %s"""
-        self.cur.execute(query, (new_value, cond_value))
+        query = f"UPDATE {self.TABLE} SET {value} = %s WHERE {cond} = %s"
+        self.cursor.execute(query, (new_value, cond_value))
 
 
 class Users(Table):
@@ -97,18 +103,28 @@ class Users(Table):
     def add_user(self, user_id: int) -> None:
         try:
             query = f"INSERT INTO {self.TABLE} VALUES (%s, 0, 1)"
-            self.cur.execute(query, (user_id,))
+            self.cursor.execute(query, (user_id,))
             logging.info("User added")
+
+        except Exception as ex:
+            logging.error(ex)
+
+    # Проверяет наличие юзера в таблице
+    def is_user_exist(self, user_id: int) -> bool:
+        try:
+            query = f"SELECT EXISTS(SELECT 1 FROM {self.TABLE} WHERE id=%s)"
+            self.cursor.execute(query, (user_id,))
+            return bool(self.cursor.fetchone()[0])
+
         except Exception as ex:
             logging.error(ex)
 
     # Добавляет юзера, если его нет в таблице
     def add_user_if_not_exist(self, user_id: int) -> None:
         try:
-            query = f"SELECT EXISTS(SELECT 1 FROM {self.TABLE} WHERE id=%s)"
-            self.cur.execute(query, (user_id,))
-            if not bool(self.cur.fetchone()[0]):
+            if not self.is_user_exist(user_id):
                 self.add_user(user_id)
+
         except Exception as ex:
             logging.error(ex)
 
@@ -126,11 +142,13 @@ class Users(Table):
     def dick_random(self, user_id: int, mention: str) -> str:
         self.add_user_if_not_exist(user_id)
         attempts = self.get_value("attempts", "id", user_id)
+
         if attempts > 0:
             # Вычитает одну попытку
             self.update_value("attempts", attempts - 1, "id", user_id)
             delta = randint(Config.MIN_DICK_DELTA, Config.MAX_DICK_DELTA)
             return self.change_dick_size(user_id, mention, delta)
+
         else:
             return self.get_dick_resp(user_id, mention, is_atts_were=False)
 
@@ -140,11 +158,13 @@ class Users(Table):
     ) -> str:
         user_size = self.get_value("size", "id", user_id)
         top_place = self.get_place_in_top(user_id)
+
         if is_atts_were:  # Если до вызова функции у юзера оставались попытки
             resp = (f"{mention}, {self.get_change_resp(delta)}"
                     f"\nТеперь он равен {user_size} см."
                     f"\nТы занимаешь {top_place} место в топе."
                     "\n" + self.get_attempts_resp(user_id))
+
         else:
             resp = (f"{mention}, у тебя не осталось попыток."
                     f"\nСейчас твой писюн равен {user_size} см."
@@ -159,18 +179,20 @@ class Users(Table):
         word_forms = self.get_words_right_form(attempts)
         left_form = word_forms[0]
         attempts_form = word_forms[1]
-        if attempts == 0:
-            return f"У тебя не осталось попыток"
-        else:
-            return f"У тебя {left_form} {attempts} {attempts_form}"
+
+        match attempts:
+            case 0:
+                return f"У тебя не осталось попыток"
+            case _:
+                return f"У тебя {left_form} {attempts} {attempts_form}"
 
     # Возвращает общий топ юзеров
-    def get_top(self) -> list[[int, int, int]]:
+    def get_top(self) -> list[tuple[int, int]]:
         try:
-            users = self.get_values("id, size", "size", True)
+            return self.get_values("id, size", "size", True)
+
         except Exception:
-            users = list()
-        return users
+            return list()
 
     # ДРУГИЕ ФУНКЦИИ
 
@@ -181,9 +203,9 @@ class Users(Table):
 
     # Возвращает позицию юзера в общем топе
     def get_place_in_top(self, user_id: int) -> int:
-        for i, user_inf in enumerate(self.get_top()):
-            if user_id in user_inf:
-                return i + 1
+        top = self.get_top()
+        top_users = {user[0]: i + 1 for i, user in enumerate(top)}
+        return top_users.get(user_id)
 
     # Добавляет 1 попытку всем юзерам каждый день
     async def add_attempts(self) -> None:
@@ -191,15 +213,17 @@ class Users(Table):
             while True:
                 # Оставшееся время до добавления попыток
                 time_delta = self.get_time_delta(Config.ATTS_ADD_HOUR)
-                await asyncio.sleep(time_delta)
+                await asyncio.sleep(time_delta)  # Ждёт назначенное время
                 users = self.get_values("id")
-                if users:
-                    for user in users:
-                        user_id = user[0]
-                        attempts = self.get_value("attempts", "id", user_id)
-                        query = f"UPDATE {self.TABLE} SET attempts = %s WHERE id = %s"
-                        self.cur.execute(query, (attempts + 1, user_id))
-                    logging.info("Attempts added")
+
+                for user in users:
+                    user_id = user[0]
+                    attempts = self.get_value("attempts", "id", user_id)
+                    query = f"UPDATE {self.TABLE} SET attempts = %s WHERE id = %s"
+                    self.cursor.execute(query, (attempts + 1, user_id))
+
+                logging.info("Attempts added")
+
         except Exception as ex:
             logging.error(ex)
 
@@ -215,8 +239,10 @@ class Users(Table):
             microsecond=0,
             tzinfo=Config.TIMEZONE
         )
+
         if cur_time > next_time:
             next_time += timedelta(days=1)
+
         delta_time = (next_time - cur_time).total_seconds()
         return delta_time
 

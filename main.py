@@ -72,14 +72,16 @@ class DickTator(commands.Bot):
         @self.command(aliases=["s", "t", "stats", "stat", "stas"])
         async def top(ctx: commands.Context) -> None:
             users = self.USERS.get_top()
-            if users:
-                resp = "Топ игроков:"
-                for i, user_inf in enumerate(users):
-                    user_name = self.get_user(user_inf[0]).display_name
-                    user_size = user_inf[1]
-                    resp += f"\n{i + 1}. {user_name} — {user_size} см"
-            else:
-                resp = "Похоже топ пустой..."
+
+            if not users:  # Если топ пустой
+                await ctx.channel.send("Похоже топ пустой...")
+
+            resp = "Топ игроков:"
+            for i, user_inf in enumerate(users):
+                user_name = self.get_user(user_inf[0]).display_name
+                user_size = user_inf[1]
+                resp += f"\n{i + 1}. {user_name} — {user_size} см"
+
             await ctx.channel.send(resp)
 
         # Выводит место в топе
@@ -88,9 +90,9 @@ class DickTator(commands.Bot):
             try:
                 user_id = ctx.author.id
                 mention = ctx.author.mention
-                await ctx.channel.send(
-                    f"{mention}, ты занимаешь {self.USERS.get_place_in_top(user_id)} место в топе"
-                )
+                resp = f"{mention}, ты занимаешь {self.USERS.get_place_in_top(user_id)} место в топе"
+                await ctx.channel.send(resp)
+
             except Exception:
                 await ctx.channel.send("Что-то пошло не так...")
 
@@ -102,6 +104,7 @@ class DickTator(commands.Bot):
                 mention = ctx.author.mention
                 attempts_resp = self.USERS.get_attempts_resp(user_id)
                 await ctx.channel.send(f"{mention}, {attempts_resp.lower()}")
+
             except Exception:
                 await ctx.channel.send("Что-то пошло не так...")
 
@@ -118,9 +121,11 @@ class DickTator(commands.Bot):
                 )
                 logging.info("Got US Government Debt")
                 await ctx.channel.send(Config.US_DEBT_GIF)
+
             except AttributeError as ex:
                 logging.warning(ex)
                 await ctx.channel.send("Произошла ошибка...")
+
             except Exception as ex:
                 logging.error(ex)
 
@@ -128,31 +133,40 @@ class DickTator(commands.Bot):
 
     # Срабатывает на любое сообщение
     async def on_message(self, message: Message) -> None:
-        # Отсеивает сообщения себя и других ботов
-        if not message.author.bot:
-            channel = message.channel
-            # Отвечает лицом на лицо
-            if Config.STALCRAFT_FACE in message.content:
-                await channel.send(Config.STALCRAFT_FACE)
-        await self.process_commands(message)
+        if (message.author.bot and  # Отсеивает сообщения себя и других ботов
+                not Config.STALCRAFT_FACE in message.content):  # Проверка на лицо в сообщении
+            await self.process_commands(message)
+        # Отвечает лицом на лицо
+        await message.channel.send(Config.STALCRAFT_FACE)
 
-    # Срабатывает при обновлении активности
     async def on_presence_update(self, before: Member, after: Member) -> None:
         try:
             channel = after.guild.text_channels[0]
-            for ban_act in Config.BANNED_ACT:
-                # Если до этого была незапрещённая активность
-                if not any(ban_act in prev_act.name.lower() for prev_act in before.activities):
-                    # Если у юзера запрещённая активность
-                    for cur_act in after.activities:
-                        if ban_act in cur_act.name.lower():
-                            self.USERS.add_user_if_not_exist(after.id)
-                            await channel.send(
-                                f"{after.mention}, {choice(Config.LEAVE_PHRASES)}"
-                            )
-                            resp = self.USERS.change_dick_size(after.id, after.mention, Config.DICK_PENALTY)
-                            await channel.send(resp)
-                            logging.info(f"{after.display_name} was punished for {cur_act.name}")
+
+            # Проверка на наличие запрещённой активности
+            current_banned_activity = next(  # Перебор всех активностей
+                cur_act for cur_act in after.activities
+                if any(ban_act in cur_act.name.lower()
+                       for ban_act in Config.BANNED_ACT
+                       )
+            )
+
+            # Если запрещённая активность обнаружена
+            if (current_banned_activity and
+                    not any(  # Если её не было до этого
+                        ban_act in prev_act.name.lower()
+                        for ban_act in Config.BANNED_ACT
+                        for prev_act in before.activities
+                    )):
+                self.USERS.add_user_if_not_exist(after.id)
+                await channel.send(f"{after.mention}, {choice(Config.LEAVE_PHRASES)}")
+
+                # Изменение размера и отправка сообщения
+                resp = self.USERS.change_dick_size(after.id, after.mention, Config.DICK_PENALTY)
+                await channel.send(resp)
+                log = f"{after.display_name} was punished for {current_banned_activity.name}"
+                logging.info(log)
+
         except Exception as ex:
             logging.error(ex)
 
