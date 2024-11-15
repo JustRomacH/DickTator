@@ -90,7 +90,8 @@ class DickTator(commands.Bot):
             try:
                 user_id = ctx.author.id
                 mention = ctx.author.mention
-                resp = f"{mention}, ты занимаешь {self.USERS.get_place_in_top(user_id)} место в топе"
+                place_in_top = self.USERS.get_place_in_top(user_id)
+                resp = f"{mention}, ты занимаешь {place_in_top} место в топе"
                 await ctx.channel.send(resp)
 
             except Exception:
@@ -156,21 +157,22 @@ class DickTator(commands.Bot):
                        )
             )
 
-            # Если запрещённая активность обнаружена
-            if (current_banned_activity and
-                    not any(  # Если её не было до этого
+            # Если запрещённая активность не обнаружена
+            if (not current_banned_activity and
+                    any(  # Если её не было до этого
                         ban_act in prev_act.name.lower()
                         for ban_act in Config.BANNED_ACT
                         for prev_act in before.activities
-                    )):
-                self.USERS.add_user_if_not_exist(after.id)
-                await channel.send(f"{after.mention}, {choice(Config.LEAVE_PHRASES)}")
+                    )
+            ): return
 
-                # Изменение размера и отправка сообщения
-                resp = self.USERS.change_dick_size(after.id, after.mention, Config.DICK_PENALTY)
-                await channel.send(resp)
-                log = f"{after.display_name} was punished for {current_banned_activity.name}"
-                logging.info(log)
+            # Изменение размера и отправка сообщения
+            self.USERS.add_user_if_not_exist(after.id)
+            await channel.send(f"{after.mention}, {choice(Config.LEAVE_PHRASES)}")
+            resp = self.USERS.change_dick_size(after.id, after.mention, Config.DICK_PENALTY)
+            await channel.send(resp)
+            log = f"{after.display_name} was punished for {current_banned_activity.name}"
+            logging.info(log)
 
         except Exception as ex:
             logging.error(ex)
