@@ -149,30 +149,24 @@ class DickTator(commands.Bot):
         try:
             channel = after.guild.text_channels[0]
 
-            # Проверка на наличие запрещённой активности
-            current_banned_activity = next(  # Перебор всех активностей
-                cur_act for cur_act in after.activities
-                if any(ban_act in cur_act.name.lower()
-                       for ban_act in Config.BANNED_ACT
-                       )
-            )
+            for ban_act in Config.BANNED_ACT:
 
-            # Если запрещённая активность не обнаружена
-            if (not current_banned_activity and
-                    any(  # Если её не было до этого
-                        ban_act in prev_act.name.lower()
-                        for ban_act in Config.BANNED_ACT
-                        for prev_act in before.activities
+                # Если до этого была запрещённая активность
+                if any(ban_act in prev_act.name.lower() for prev_act in before.activities):
+                    continue
+
+                for cur_act in after.activities:
+
+                    if not ban_act in cur_act.name.lower():
+                        continue
+
+                    self.USERS.add_user_if_not_exist(after.id)
+                    await channel.send(
+                        f"{after.mention}, {choice(Config.LEAVE_PHRASES)}"
                     )
-            ): return
-
-            # Изменение размера и отправка сообщения
-            self.USERS.add_user_if_not_exist(after.id)
-            await channel.send(f"{after.mention}, {choice(Config.LEAVE_PHRASES)}")
-            resp = self.USERS.change_dick_size(after.id, after.mention, Config.DICK_PENALTY)
-            await channel.send(resp)
-            log = f"{after.display_name} was punished for {current_banned_activity.name}"
-            logging.info(log)
+                    resp = self.USERS.change_dick_size(after.id, after.mention, Config.DICK_PENALTY)
+                    await channel.send(resp)
+                    logging.info(f"{after.display_name} was punished for {cur_act.name}")
 
         except Exception as ex:
             logging.error(ex)
