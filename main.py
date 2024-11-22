@@ -115,10 +115,10 @@ class DickTator(commands.Bot):
             try:
                 req = requests.get(Config.US_DEBT_URL).content
                 html = BeautifulSoup(req, "html.parser")
-                div = html.find("div", {"class": "debt-number"})
-                debt = div.find("span").text
+                el = html.find("span", {"class": "debt-number"})
+                debt = el.text
                 await ctx.channel.send(
-                    f"Госдолг США составляет {debt}"
+                    f"Госдолг США составляет ${debt}"
                 )
                 logging.info("Got US Government Debt")
                 await ctx.channel.send(Config.US_DEBT_GIF)
