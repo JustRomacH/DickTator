@@ -39,7 +39,7 @@ class Config:
     PASSWORD = getenv("PASSWORD")
     DATABASE = getenv("DATABASE")
     CONN_RETRY_DELAY = 30
-    DICK_PENALTY: int = -5
+    DICK_PENALTY: int = -10
     ATTS_ADD_HOUR: int = 17
     MIN_DICK_DELTA: int = 0
     MAX_DICK_DELTA: int = 10
