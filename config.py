@@ -56,6 +56,8 @@ class Config:
         "genshin",
         "honkai",
         "zenless",
+        "destiny",
+        "warframe",
         "zzz"
     )
 
