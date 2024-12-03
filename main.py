@@ -32,12 +32,15 @@ class DickTator(commands.Bot):
         aliases_list = list()
 
         for func in self.commands:
-            if not func.name == 'help':
-                commands_str = f"\n{self.command_prefix}{func.name} - {COMMANDS.get(func.name)}"
-                commands_list.append(commands_str)
-                aliases = sorted(func.aliases, key=len)
-                aliases_str = f"\n{self.command_prefix}{func.name} - {", ".join(aliases)}"
-                aliases_list.append(aliases_str)
+            
+            if func.name == 'help':
+                continue
+
+            command_str = f"\n{self.command_prefix}{func.name} - {COMMANDS.get(func.name)}"
+            commands_list.append(command_str)
+            aliases = sorted(func.aliases, key=len)
+            alias_str = f"\n{self.command_prefix}{func.name} - {", ".join(aliases)}"
+            aliases_list.append(alias_str)
 
         Config.HELP += ("\n\nКоманды:"
                         + str().join(commands_list)
