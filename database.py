@@ -132,14 +132,14 @@ class Users(Table):
 
     # Изменяет размер писюна на delta см
     def change_dick_size(
-            self, user_id: int, mention: str, delta: int,
+            self, user_id: int, delta: int,
     ) -> str:
         user_size = self.get_value("size", "id", user_id)
         self.update_value("size", user_size + delta, "id", user_id)
-        return self.get_dick_resp(user_id, mention, delta)
+        return self.get_dick_resp(user_id, delta)
 
     # Изменяет размер писюна на случайное число см
-    def dick_random(self, user_id: int, mention: str) -> str:
+    def dick_random(self, user_id: int) -> str:
         self.add_user_if_not_exist(user_id)
         attempts = self.get_value("attempts", "id", user_id)
 
@@ -147,26 +147,26 @@ class Users(Table):
             # Вычитает одну попытку
             self.update_value("attempts", attempts - 1, "id", user_id)
             delta = randint(Config.MIN_DICK_DELTA, Config.MAX_DICK_DELTA)
-            return self.change_dick_size(user_id, mention, delta)
+            return self.change_dick_size(user_id, delta)
 
         else:
-            return self.get_dick_resp(user_id, mention, is_atts_were=False)
+            return self.get_dick_resp(user_id, is_atts_were=False)
 
     # Возвращает текст, которым ответит бот
     def get_dick_resp(
-            self, user_id: int, mention: str, delta: int = 0, is_atts_were: bool = True
+            self, user_id: int, delta: int = 0, is_atts_were: bool = True
     ) -> str:
         user_size = self.get_value("size", "id", user_id)
         top_place = self.get_place_in_top(user_id)
 
         if is_atts_were:  # Если до вызова функции у юзера оставались попытки
-            resp = (f"{mention}, {self.get_change_resp(delta)}"
+            resp = (f"{self.get_change_resp(delta)}"
                     f"\nТеперь он равен {user_size} см."
                     f"\nТы занимаешь {top_place} место в топе."
                     "\n" + self.get_attempts_resp(user_id))
 
         else:
-            resp = (f"{mention}, у тебя не осталось попыток."
+            resp = (f"у тебя не осталось попыток."
                     f"\nСейчас твой писюн равен {user_size} см."
                     f"\nТы занимаешь {top_place} место в топе.")
         return resp

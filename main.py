@@ -32,7 +32,7 @@ class DickTator(commands.Bot):
         aliases_list = list()
 
         for func in self.commands:
-            
+
             if func.name == 'help':
                 continue
 
@@ -68,8 +68,8 @@ class DickTator(commands.Bot):
         async def dick(ctx: commands.Context) -> None:
             user_id = ctx.author.id
             mention = ctx.author.mention
-            resp = self.USERS.dick_random(user_id, mention)
-            await ctx.channel.send(resp)
+            resp = self.USERS.dick_random(user_id)
+            await ctx.channel.send(f"{mention}, {resp}")
 
         # Выводит топ игроков
         @self.command(aliases=["s", "t", "stats", "stat", "stas"])
@@ -78,10 +78,12 @@ class DickTator(commands.Bot):
 
             if not users:  # Если топ пустой
                 await ctx.channel.send("Похоже топ пустой...")
+                return
 
             resp = "Топ игроков:"
             for i, user_inf in enumerate(users):
-                user_name = self.get_user(user_inf[0]).display_name
+                user_id = user_inf[0]
+                user_name = self.get_user(user_id).display_name
                 user_size = user_inf[1]
                 resp += f"\n{i + 1}. {user_name} — {user_size} см"
 
@@ -167,8 +169,8 @@ class DickTator(commands.Bot):
                     await channel.send(
                         f"{after.mention}, {choice(Config.LEAVE_PHRASES)}"
                     )
-                    resp = self.USERS.change_dick_size(after.id, after.mention, Config.DICK_PENALTY)
-                    await channel.send(resp)
+                    resp = self.USERS.change_dick_size(after.id, Config.DICK_PENALTY)
+                    await channel.send(f"{after.mention}, {resp}")
                     logging.info(f"{after.display_name} was punished for {cur_act.name}")
 
         except Exception as ex:
