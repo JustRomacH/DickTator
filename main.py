@@ -231,7 +231,7 @@ class DickTator(commands.Bot):
         global_top: dict[int, int] = self.USERS.get_sliced_top()
         top_ids = global_top.keys()
         members_ids: list[int] = [member.id for member in ctx.guild.members]
-        common_ids = list(filter(lambda x: x in members_ids, top_ids))
+        common_ids: list[int] = list(filter(lambda x: x in members_ids, top_ids))
         return {user_id: global_top.get(user_id) for user_id in common_ids}
 
 
