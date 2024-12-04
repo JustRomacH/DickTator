@@ -1,4 +1,6 @@
 import asyncio
+
+import discord.app_commands
 import requests
 from config import *
 from random import choice
@@ -31,11 +33,16 @@ class DickTator(commands.Bot):
     def add_funcs_info(self) -> None:
         commands_list: list = list()
         aliases_list: list = list()
+        bot_commands: list[discord.ext.commands.Command] = sorted(
+            self.commands, key=lambda f: len(f.name)
+        )
 
-        for func in self.commands:
+        for func in bot_commands:
 
             if func.name == 'help':
                 continue
+
+            print(func.name)
 
             command_str: str = f"\n{self.command_prefix}{func.name} - {COMMANDS.get(func.name)}"
             commands_list.append(command_str)
@@ -72,36 +79,33 @@ class DickTator(commands.Bot):
             resp: str = self.USERS.dick_random(user_id)
             await ctx.channel.send(f"{mention}, {resp}")
 
-        # Выводит топ игроков
+        # Выводит топ писюнов сервера
         @self.command(aliases=["s", "t", "stats", "stat", "stas"])
         async def top(ctx: commands.Context) -> None:
-            users: list[tuple[int, int]] = self.USERS.get_top()[:10]
-
-            if not users:  # Если топ пустой
-                await ctx.channel.send("Похоже топ пустой...")
-                return
-
-            resp: str = "Топ игроков:"
-            for i, user_inf in enumerate(users):
-                user_id: int = user_inf[0]
-                user_name: str = ctx.guild.get_member(user_id).display_name
-                user_size: int = user_inf[1]
-                resp += f"\n{i + 1}. {user_name} — {user_size} см"
-
+            local_top = self.get_local_top(ctx)
+            resp = self.get_top_resp(ctx, local_top)
             await ctx.channel.send(resp)
 
-        # Выводит место в топе
+        # Выводит глобальный топ писюнов
+        @self.command(aliases=["gs", "gt", "gstats", "gstat", "gstas"])
+        async def gtop(ctx: commands.Context) -> None:
+            global_top: dict[int, int] = self.USERS.get_sliced_top()
+            resp = self.get_top_resp(ctx, global_top, True)
+            await ctx.channel.send(resp)
+
+        # Выводит место в топе сервера
         @self.command(aliases=["p", "n", "num", "number"])
         async def place(ctx: commands.Context) -> None:
-            try:
-                user_id: int = ctx.author.id
-                mention: str = ctx.author.mention
-                place_in_top: int = self.USERS.get_place_in_top(user_id)
-                resp: str = f"{mention}, ты занимаешь {place_in_top} место в топе"
-                await ctx.channel.send(resp)
+            local_top = self.get_local_top(ctx)
+            resp = self.get_place_resp(ctx, local_top)
+            await ctx.channel.send(resp)
 
-            except Exception:
-                await ctx.channel.send("Что-то пошло не так...")
+        # Выводит место в глобальном топе
+        @self.command(aliases=["gp", "gn", "gnum", "gnumber"])
+        async def gplace(ctx: commands.Context) -> None:
+            global_top = self.USERS.get_sliced_top()
+            resp = self.get_place_resp(ctx, global_top, True)
+            await ctx.channel.send(resp)
 
         # Выводит количество оставшихся попыток
         @self.command(aliases=["a", "att", "atts", "try", "tries"])
@@ -183,6 +187,54 @@ class DickTator(commands.Bot):
             await context.channel.send(
                 f"{context.author.mention}, такой команды не существует..."
             )
+
+    # ДРУГИЕ ФУНКЦИИ
+
+    def get_top_resp(self, ctx: Context, users_top: dict[int, int], is_global: bool = False) -> str:
+        if not users_top:  # Если топ пустой
+            return "Похоже топ пустой..."
+
+        if is_global:
+            resp = "Глобальный топ писюнов:"
+        else:
+            resp: str = "Топ писюнов сервера:"
+
+        for i, user_id in enumerate(users_top):
+
+            if is_global:
+                user_name: str = self.get_user(user_id).display_name
+            else:
+                user_name: str = ctx.guild.get_member(user_id).display_name
+
+            user_size: int = users_top.get(user_id)
+            resp += f"\n{i + 1}. {user_name} — {user_size} см"
+
+        return resp
+
+    # Возвращает текст с местом в топе
+    def get_place_resp(
+            self, ctx: Context, users_top: dict[int, int], is_global: bool = False
+    ) -> str:
+        try:
+            user_id: int = ctx.author.id
+            mention: str = ctx.author.mention
+            place_in_top: int = self.USERS.get_place_in_top(user_id, users_top)
+
+            if is_global:
+                return f"{mention}, ты занимаешь {place_in_top} место в глобальном топе"
+            else:
+                return f"{mention}, ты занимаешь {place_in_top} место в топе сервера"
+
+        except Exception:
+            return "Что-то пошло не так..."
+
+    # Возвращает топ сервера
+    def get_local_top(self, ctx: Context) -> dict[int, int]:
+        global_top: dict[int, int] = self.USERS.get_sliced_top()
+        top_ids = global_top.keys()
+        members_ids: list[int] = [member.id for member in ctx.guild.members]
+        common_ids = list(filter(lambda x: x in members_ids, top_ids))
+        return {user_id: global_top.get(user_id) for user_id in common_ids}
 
 
 async def main() -> None:
