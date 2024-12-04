@@ -174,7 +174,7 @@ class Users(Table):
     # Возвращает текст с количеством попыток
     def get_attempts_resp(self, user_id: int) -> str:
         attempts: int = self.get_attempts(user_id)
-        word_forms: tuple[str, str] = self.get_words_right_form(attempts)
+        word_forms: tuple[str, str] = get_words_right_form(attempts)
         left_form: str = word_forms[0]
         attempts_form: str = word_forms[1]
 
@@ -261,16 +261,6 @@ class Users(Table):
             return f"твой писюн уменьшился на {abs(delta)} см."
         else:
             return f"твой писюн не изменился."
-
-    # Возвращает слова с правильными окончаниями
-    @staticmethod
-    def get_words_right_form(num: int | float) -> tuple[str, str]:
-        if num == 1:
-            return "осталась", "попытка"
-        elif num in (2, 3, 4):
-            return "осталось", "попытки"
-        else:
-            return "осталось", "попыток"
 
     # Обрезает словарь
     @staticmethod

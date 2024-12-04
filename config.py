@@ -20,6 +20,16 @@ COMMANDS: dict = {
 }
 
 
+# Возвращает слова с правильными окончаниями
+def get_words_right_form(num: int | float) -> tuple[str, str]:
+    if num == 1:
+        return "осталась", "попытка"
+    elif num in (2, 3, 4):
+        return "осталось", "попытки"
+    else:
+        return "осталось", "попыток"
+
+
 def setup_logging() -> None:
     format_str: str = "[%(asctime)s] [%(levelname)s] %(message)s"
     logging.basicConfig(
@@ -77,7 +87,7 @@ class Config:
     )
 
     HELP: str = f"""Каждый день в {ATTS_ADD_HOUR}:00 всем выдаётся 
-1 попытка увеличить свой писюн. Для этого
+{ATTS_AMOUNT} {get_words_right_form(ATTS_AMOUNT)[1]} увеличить свой писюн. Для этого
 нужно использовать команду {PREFIX}dick. Рандом
 выдаёт числа от {MIN_DICK_DELTA} до {MAX_DICK_DELTA} см. За запуск
 Доты, Unturned и т.п. твой писюн
