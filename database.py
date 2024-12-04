@@ -200,7 +200,7 @@ class Users(Table):
 
     # Возвращает позицию юзера в общем топе
     def get_place_in_top(self, user_id: int) -> int:
-        top: list[tuple[int, int]] = self.get_top()
+        top: list[tuple[int, int]] = self.get_top()[:Config.USERS_IN_TOP]
         top_users: dict[int: int] = {user[0]: i + 1 for i, user in enumerate(top)}
         return top_users.get(user_id)
 
