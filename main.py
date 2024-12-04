@@ -84,7 +84,7 @@ class DickTator(commands.Bot):
             resp: str = "Топ игроков:"
             for i, user_inf in enumerate(users):
                 user_id: int = user_inf[0]
-                user_name: str = self.get_user(user_id).display_name
+                user_name: str = ctx.guild.get_member(user_id).display_name
                 user_size: int = user_inf[1]
                 resp += f"\n{i + 1}. {user_name} — {user_size} см"
 
