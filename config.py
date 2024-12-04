@@ -43,6 +43,7 @@ class Config:
     CONN_RETRY_DELAY: int = 30
     DICK_PENALTY: int = -10
     ATTS_ADD_HOUR: int = 17
+    ATTS_AMOUNT: int = 1
     MIN_DICK_DELTA: int = 0
     MAX_DICK_DELTA: int = 10
     MAX_USERS_IN_TOP: int = 10
