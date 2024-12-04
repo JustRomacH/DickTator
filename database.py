@@ -24,8 +24,8 @@ class DataBase:
         except Exception as ex:
             logging.error(ex)
 
-        finally:
-            asyncio.create_task(self.reconnect_on_error())
+        # finally:
+        # asyncio.create_task(self.reconnect_on_error())
 
     # Подключение к базе данных
     def connect_to_db(self):
@@ -154,7 +154,8 @@ class Users(Table):
             self, user_id: int, delta: int = 0, is_atts_were: bool = True
     ) -> str:
         user_size: int = self.get_value("size", "id", user_id)
-        top_place: int = self.get_place_in_top(user_id)
+        top = self.get_sliced_top()
+        top_place: int = self.get_place_in_top(user_id, top)
 
         if is_atts_were:  # Если до вызова функции у юзера оставались попытки
             resp = (f"{self.get_size_change_resp(delta)}"
@@ -183,13 +184,10 @@ class Users(Table):
             case _:
                 return f"У тебя {left_form} {attempts} {attempts_form}"
 
-    # Возвращает общий топ юзеров
-    def get_top(self) -> list[tuple[int, int]]:
-        try:
-            return self.get_values("id, size", "size", True)
-
-        except Exception:
-            return list()
+    # Возвращает обрезанный топ
+    def get_sliced_top(self) -> dict[int, int]:
+        top = self.get_top()
+        return self.slice_dict(top, Config.MAX_USERS_IN_TOP)
 
     # ДРУГИЕ ФУНКЦИИ
 
@@ -198,11 +196,23 @@ class Users(Table):
         self.add_user_if_not_exist(user_id)
         return self.get_value("attempts", "id", user_id)
 
+    # Возвращает общий топ юзеров
+    def get_top(self) -> dict[int, int]:
+        try:
+            top_list: list[tuple[int, int]] = self.get_values(
+                "id, size", "size", True
+            )
+            top_dict: dict[int, int] = {user_inf[0]: user_inf[1] for user_inf in top_list}
+            return top_dict
+
+        except Exception:
+            return dict()
+
     # Возвращает позицию юзера в общем топе
-    def get_place_in_top(self, user_id: int) -> int:
-        top: list[tuple[int, int]] = self.get_top()[:Config.USERS_IN_TOP]
-        top_users: dict[int: int] = {user[0]: i + 1 for i, user in enumerate(top)}
-        return top_users.get(user_id)
+    @staticmethod
+    def get_place_in_top(user_id: int, top: dict[int, int]) -> int:
+        numbered_top: dict[int, int] = {user: i + 1 for i, user in enumerate(top.keys())}
+        return numbered_top.get(user_id)
 
     # Добавляет 1 попытку всем юзерам каждый день
     async def add_attempts(self) -> None:
@@ -261,6 +271,12 @@ class Users(Table):
             return "осталось", "попытки"
         else:
             return "осталось", "попыток"
+
+    # Обрезает словарь
+    @staticmethod
+    def slice_dict(full_dict: dict, gap: int) -> dict:
+        items = full_dict.items()
+        return dict(list(items)[:gap])
 
 
 def main():
