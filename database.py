@@ -45,7 +45,7 @@ class DataBase:
     async def reconnect_on_error(self) -> None:
         while True:
             try:
-                if not self.conn.is_connected():
+                if not self.conn:
                     logging.info("Trying to reconnect")
                     self.connect_to_db()
                     logging.info("Successfully reconnected to database")
