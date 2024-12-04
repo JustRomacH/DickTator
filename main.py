@@ -42,8 +42,6 @@ class DickTator(commands.Bot):
             if func.name == 'help':
                 continue
 
-            print(func.name)
-
             command_str: str = f"\n{self.command_prefix}{func.name} - {COMMANDS.get(func.name)}"
             commands_list.append(command_str)
             aliases = sorted(func.aliases, key=len)
