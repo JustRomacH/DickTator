@@ -19,7 +19,7 @@ COMMANDS: dict = {
 
 
 def setup_logging() -> None:
-    format_str = "[%(asctime)s] [%(levelname)s] %(message)s"
+    format_str: str = "[%(asctime)s] [%(levelname)s] %(message)s"
     logging.basicConfig(
         filename="dicktator.log",
         filemode="a",
@@ -32,22 +32,23 @@ def setup_logging() -> None:
 # Основные переменные бота
 @dataclass
 class Config:
-    PREFIX = "!"
-    TOKEN = getenv("TOKEN")
-    HOST = getenv("HOST")
-    USER = getenv("USER")
-    PASSWORD = getenv("PASSWORD")
-    DATABASE = getenv("DATABASE")
-    CONN_RETRY_DELAY = 30
+    PREFIX: str = "!"
+    TOKEN: str = getenv("TOKEN")
+    HOST: str = getenv("HOST")
+    USER: str = getenv("USER")
+    PASSWORD: str = getenv("PASSWORD")
+    DATABASE: str = getenv("DATABASE")
+    CONN_RETRY_DELAY: int = 30
     DICK_PENALTY: int = -10
     ATTS_ADD_HOUR: int = 17
     MIN_DICK_DELTA: int = 0
     MAX_DICK_DELTA: int = 10
+    USERS_IN_TOP: int = 10
     TIMEZONE: timezone = timezone(timedelta(hours=3))
     GIT_REPO: str = Path(__file__).parent.resolve().joinpath(".git")
-    US_DEBT_URL = "https://www.pgpf.org/national-debt-clock"
-    US_DEBT_GIF = "https://media1.tenor.com/m/inHdJJ90TKEAAAAd/%D0%B4%D0%BE%D0%BB%D0%B3-%D1%81%D1%88%D0%B0.gif"
-    STALCRAFT_FACE = "https://tenor.com/view/stalcraft-%D1%81%D0%BD%D1%8E%D1%81-minecraft-gif-19986730"
+    US_DEBT_URL: str = "https://www.pgpf.org/national-debt-clock"
+    US_DEBT_GIF: str = "https://media1.tenor.com/m/inHdJJ90TKEAAAAd/%D0%B4%D0%BE%D0%BB%D0%B3-%D1%81%D1%88%D0%B0.gif"
+    STALCRAFT_FACE: str = "https://tenor.com/view/stalcraft-%D1%81%D0%BD%D1%8E%D1%81-minecraft-gif-19986730"
 
     BANNED_ACT: tuple[str] = (
         "stalcraft",

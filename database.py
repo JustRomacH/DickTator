@@ -2,18 +2,18 @@ import asyncio
 from config import *
 from config import Config
 from random import randint
-from datetime import datetime, timedelta
 from mysql.connector import connect
+from datetime import datetime, timedelta
 
 
 class DataBase:
     def __init__(
             self, host: str, user: str, password: str, database: str
     ) -> None:
-        self.HOST = host
-        self.USER = user
-        self.PASSWORD = password
-        self.DATABASE = database
+        self.HOST: str = host
+        self.USER: str = user
+        self.PASSWORD: str = password
+        self.DATABASE: str = database
         self.conn = None
         self.cursor = None
 
@@ -25,10 +25,7 @@ class DataBase:
             logging.error(ex)
 
         finally:
-            if __name__ == "__main__":
-                asyncio.run(self.reconnect_on_error())
-            else:
-                asyncio.create_task(self.reconnect_on_error())
+            asyncio.create_task(self.reconnect_on_error())
 
     # Подключение к базе данных
     def connect_to_db(self):
@@ -62,13 +59,13 @@ class Table(DataBase):
             self, host: str, user: str, password: str, database: str, table: str
     ) -> None:
         super().__init__(host, user, password, database)
-        self.TABLE = table
+        self.TABLE: str = table
 
     # МЕТОДЫ ДЛЯ РАБОТЫ С ТАБЛИЦЕЙ
 
     # Возвращает выбранное значение по id
     def get_value(self, value: str, cond: str, cond_value: any) -> int:
-        query = f"SELECT {value} FROM {self.TABLE} WHERE {cond} = %s"
+        query: str = f"SELECT {value} FROM {self.TABLE} WHERE {cond} = %s"
         self.cursor.execute(query, (cond_value,))
         return self.cursor.fetchone()[0]
 
@@ -76,7 +73,7 @@ class Table(DataBase):
     def get_values(
             self, value: str, order: str = None, reverse: bool = False
     ) -> list[any]:
-        query = f"SELECT {value} FROM {self.TABLE}"
+        query: str = f"SELECT {value} FROM {self.TABLE}"
         # Порядок сортировки
         if order:
             query += f" ORDER BY {order}"
@@ -89,7 +86,7 @@ class Table(DataBase):
     def update_value(
             self, value: str, new_value: int, cond: str, cond_value: any
     ) -> None:
-        query = f"UPDATE {self.TABLE} SET {value} = %s WHERE {cond} = %s"
+        query: str = f"UPDATE {self.TABLE} SET {value} = %s WHERE {cond} = %s"
         self.cursor.execute(query, (new_value, cond_value))
 
 
@@ -102,7 +99,7 @@ class Users(Table):
     # Добавляет юзера в таблицу
     def add_user(self, user_id: int) -> None:
         try:
-            query = f"INSERT INTO {self.TABLE} VALUES (%s, 0, 1)"
+            query: str = f"INSERT INTO {self.TABLE} VALUES (%s, 0, 1)"
             self.cursor.execute(query, (user_id,))
             logging.info("User added")
 
@@ -112,7 +109,7 @@ class Users(Table):
     # Проверяет наличие юзера в таблице
     def is_user_exist(self, user_id: int) -> bool:
         try:
-            query = f"SELECT EXISTS(SELECT 1 FROM {self.TABLE} WHERE id=%s)"
+            query: str = f"SELECT EXISTS(SELECT 1 FROM {self.TABLE} WHERE id=%s)"
             self.cursor.execute(query, (user_id,))
             return bool(self.cursor.fetchone()[0])
 
@@ -134,19 +131,19 @@ class Users(Table):
     def change_dick_size(
             self, user_id: int, delta: int,
     ) -> str:
-        user_size = self.get_value("size", "id", user_id)
+        user_size: int = self.get_value("size", "id", user_id)
         self.update_value("size", user_size + delta, "id", user_id)
         return self.get_dick_resp(user_id, delta)
 
     # Изменяет размер писюна на случайное число см
     def dick_random(self, user_id: int) -> str:
         self.add_user_if_not_exist(user_id)
-        attempts = self.get_value("attempts", "id", user_id)
+        attempts: int = self.get_value("attempts", "id", user_id)
 
         if attempts > 0:
             # Вычитает одну попытку
             self.update_value("attempts", attempts - 1, "id", user_id)
-            delta = randint(Config.MIN_DICK_DELTA, Config.MAX_DICK_DELTA)
+            delta: int = randint(Config.MIN_DICK_DELTA, Config.MAX_DICK_DELTA)
             return self.change_dick_size(user_id, delta)
 
         else:
@@ -156,11 +153,11 @@ class Users(Table):
     def get_dick_resp(
             self, user_id: int, delta: int = 0, is_atts_were: bool = True
     ) -> str:
-        user_size = self.get_value("size", "id", user_id)
-        top_place = self.get_place_in_top(user_id)
+        user_size: int = self.get_value("size", "id", user_id)
+        top_place: int = self.get_place_in_top(user_id)
 
         if is_atts_were:  # Если до вызова функции у юзера оставались попытки
-            resp = (f"{self.get_change_resp(delta)}"
+            resp = (f"{self.get_size_change_resp(delta)}"
                     f"\nТеперь он равен {user_size} см."
                     f"\nТы занимаешь {top_place} место в топе."
                     "\n" + self.get_attempts_resp(user_id))
@@ -175,10 +172,10 @@ class Users(Table):
 
     # Возвращает текст с количеством попыток
     def get_attempts_resp(self, user_id: int) -> str:
-        attempts = self.get_attempts(user_id)
-        word_forms = self.get_words_right_form(attempts)
-        left_form = word_forms[0]
-        attempts_form = word_forms[1]
+        attempts: int = self.get_attempts(user_id)
+        word_forms: tuple[str, str] = self.get_words_right_form(attempts)
+        left_form: str = word_forms[0]
+        attempts_form: str = word_forms[1]
 
         match attempts:
             case 0:
@@ -203,8 +200,8 @@ class Users(Table):
 
     # Возвращает позицию юзера в общем топе
     def get_place_in_top(self, user_id: int) -> int:
-        top = self.get_top()
-        top_users = {user[0]: i + 1 for i, user in enumerate(top)}
+        top: list[tuple[int, int]] = self.get_top()
+        top_users: dict[int: int] = {user[0]: i + 1 for i, user in enumerate(top)}
         return top_users.get(user_id)
 
     # Добавляет 1 попытку всем юзерам каждый день
@@ -212,14 +209,14 @@ class Users(Table):
         try:
             while True:
                 # Оставшееся время до добавления попыток
-                time_delta = self.get_time_delta(Config.ATTS_ADD_HOUR)
+                time_delta: float = self.get_time_delta(Config.ATTS_ADD_HOUR)
                 await asyncio.sleep(time_delta)  # Ждёт назначенное время
-                users = self.get_values("id")
+                users: list[tuple[int, int]] = self.get_values("id, attempts")
 
                 for user in users:
-                    user_id = user[0]
-                    attempts = self.get_value("attempts", "id", user_id)
-                    query = f"UPDATE {self.TABLE} SET attempts = %s WHERE id = %s"
+                    user_id: int = user[0]
+                    attempts: int = user[1]
+                    query: str = f"UPDATE {self.TABLE} SET attempts = %s WHERE id = %s"
                     self.cursor.execute(query, (attempts + 1, user_id))
 
                 logging.info("Attempts added")
@@ -230,8 +227,8 @@ class Users(Table):
     # Возвращает кол-во секунд до времени добавления попыток
     @staticmethod
     def get_time_delta(hour: int) -> float:
-        cur_time = datetime.today().astimezone(Config.TIMEZONE)
-        next_time = cur_time.replace(
+        cur_time: datetime = datetime.today().astimezone(Config.TIMEZONE)
+        next_time: datetime = cur_time.replace(
             day=cur_time.day,
             hour=hour,
             minute=0,
@@ -243,11 +240,11 @@ class Users(Table):
         if cur_time > next_time:
             next_time += timedelta(days=1)
 
-        delta_time = (next_time - cur_time).total_seconds()
+        delta_time: float = (next_time - cur_time).total_seconds()
         return delta_time
 
     @staticmethod
-    def get_change_resp(delta: int) -> str:
+    def get_size_change_resp(delta: int) -> str:
         if delta > 0:
             return f"твой писюн вырос на {delta} см."
         elif delta < 0:
@@ -267,7 +264,7 @@ class Users(Table):
 
 
 def main():
-    DataBase(
+    Users(
         Config.HOST,
         Config.USER,
         Config.PASSWORD,

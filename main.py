@@ -2,9 +2,10 @@ import asyncio
 import requests
 from config import *
 from random import choice
-from bs4 import BeautifulSoup
 from database import Users
+from discord import TextChannel
 from discord.ext import commands
+from bs4 import BeautifulSoup as BS, Tag
 from discord import Intents, Member, Message
 from discord.ext.commands import Context, errors
 
@@ -28,15 +29,15 @@ class DickTator(commands.Bot):
 
     # Добавляет информацию о функциях в HELP в config
     def add_funcs_info(self) -> None:
-        commands_list = list()
-        aliases_list = list()
+        commands_list: list = list()
+        aliases_list: list = list()
 
         for func in self.commands:
 
             if func.name == 'help':
                 continue
 
-            command_str = f"\n{self.command_prefix}{func.name} - {COMMANDS.get(func.name)}"
+            command_str: str = f"\n{self.command_prefix}{func.name} - {COMMANDS.get(func.name)}"
             commands_list.append(command_str)
             aliases = sorted(func.aliases, key=len)
             alias_str = f"\n{self.command_prefix}{func.name} - {", ".join(aliases)}"
@@ -66,25 +67,25 @@ class DickTator(commands.Bot):
         # Изменяет размер писюна на рандомное значение
         @self.command(aliases=["d", "penis", "cock", "4len"])
         async def dick(ctx: commands.Context) -> None:
-            user_id = ctx.author.id
-            mention = ctx.author.mention
-            resp = self.USERS.dick_random(user_id)
+            user_id: int = ctx.author.id
+            mention: str = ctx.author.mention
+            resp: str = self.USERS.dick_random(user_id)
             await ctx.channel.send(f"{mention}, {resp}")
 
         # Выводит топ игроков
         @self.command(aliases=["s", "t", "stats", "stat", "stas"])
         async def top(ctx: commands.Context) -> None:
-            users = self.USERS.get_top()
+            users: list[tuple[int, int]] = self.USERS.get_top()[:10]
 
             if not users:  # Если топ пустой
                 await ctx.channel.send("Похоже топ пустой...")
                 return
 
-            resp = "Топ игроков:"
+            resp: str = "Топ игроков:"
             for i, user_inf in enumerate(users):
-                user_id = user_inf[0]
-                user_name = self.get_user(user_id).display_name
-                user_size = user_inf[1]
+                user_id: int = user_inf[0]
+                user_name: str = self.get_user(user_id).display_name
+                user_size: int = user_inf[1]
                 resp += f"\n{i + 1}. {user_name} — {user_size} см"
 
             await ctx.channel.send(resp)
@@ -93,10 +94,10 @@ class DickTator(commands.Bot):
         @self.command(aliases=["p", "n", "num", "number"])
         async def place(ctx: commands.Context) -> None:
             try:
-                user_id = ctx.author.id
-                mention = ctx.author.mention
-                place_in_top = self.USERS.get_place_in_top(user_id)
-                resp = f"{mention}, ты занимаешь {place_in_top} место в топе"
+                user_id: int = ctx.author.id
+                mention: str = ctx.author.mention
+                place_in_top: int = self.USERS.get_place_in_top(user_id)
+                resp: str = f"{mention}, ты занимаешь {place_in_top} место в топе"
                 await ctx.channel.send(resp)
 
             except Exception:
@@ -106,9 +107,9 @@ class DickTator(commands.Bot):
         @self.command(aliases=["a", "att", "atts", "try", "tries"])
         async def attempts(ctx: commands.Context) -> None:
             try:
-                user_id = ctx.author.id
-                mention = ctx.author.mention
-                attempts_resp = self.USERS.get_attempts_resp(user_id)
+                user_id: int = ctx.author.id
+                mention: str = ctx.author.mention
+                attempts_resp: str = self.USERS.get_attempts_resp(user_id)
                 await ctx.channel.send(f"{mention}, {attempts_resp.lower()}")
 
             except Exception:
@@ -118,10 +119,10 @@ class DickTator(commands.Bot):
         @self.command(aliases=["gd", "nd", "usa", "us", "dolg", "debt"])
         async def gosdolg(ctx: commands.Context) -> None:
             try:
-                req = requests.get(Config.US_DEBT_URL).content
-                html = BeautifulSoup(req, "html.parser")
-                el = html.find("span", {"class": "debt-number"})
-                debt = el.text
+                req: bytes = requests.get(Config.US_DEBT_URL).content
+                html: BS = BS(req, "html.parser")
+                el: Tag = html.find("span", {"class": "debt-number"})
+                debt: str = el.text
                 await ctx.channel.send(
                     f"Госдолг США составляет ${debt}"
                 )
@@ -152,7 +153,7 @@ class DickTator(commands.Bot):
 
     async def on_presence_update(self, before: Member, after: Member) -> None:
         try:
-            channel = after.guild.text_channels[0]
+            channel: TextChannel = after.guild.text_channels[0]
 
             for ban_act in Config.BANNED_ACT:
 
@@ -169,7 +170,7 @@ class DickTator(commands.Bot):
                     await channel.send(
                         f"{after.mention}, {choice(Config.LEAVE_PHRASES)}"
                     )
-                    resp = self.USERS.change_dick_size(after.id, Config.DICK_PENALTY)
+                    resp: str = self.USERS.change_dick_size(after.id, Config.DICK_PENALTY)
                     await channel.send(f"{after.mention}, {resp}")
                     logging.info(f"{after.display_name} was punished for {cur_act.name}")
 
