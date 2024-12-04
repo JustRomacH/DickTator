@@ -227,7 +227,7 @@ class Users(Table):
                     user_id: int = user[0]
                     attempts: int = user[1]
                     query: str = f"UPDATE {self.TABLE} SET attempts = %s WHERE id = %s"
-                    self.cursor.execute(query, (attempts + 1, user_id))
+                    self.cursor.execute(query, (attempts + Config.ATTS_AMOUNT, user_id))
 
                 logging.info("Attempts added")
 
