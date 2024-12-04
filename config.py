@@ -11,10 +11,12 @@ COMMANDS: dict = {
     "info": "выводит это сообщение",
     "dick": "изменяет размер писюна",
     "attempts": "выводит количество попыток",
-    "top": "выводит глобальный топ игроков",
+    "top": "выводит топ игроков сервера",
+    "gtop": "выводит глобальный топ игроков",
     "stalcraft": "скидывает лицо из Stalcraft",
     "gosdolg": "выводит госдолг США",
-    "place": "выводит место в топе"
+    "place": "выводит место в топе сервера",
+    "gplace": "выводит место в глобальном топе"
 }
 
 
@@ -43,7 +45,7 @@ class Config:
     ATTS_ADD_HOUR: int = 17
     MIN_DICK_DELTA: int = 0
     MAX_DICK_DELTA: int = 10
-    USERS_IN_TOP: int = 10
+    MAX_USERS_IN_TOP: int = 10
     TIMEZONE: timezone = timezone(timedelta(hours=3))
     GIT_REPO: str = Path(__file__).parent.resolve().joinpath(".git")
     US_DEBT_URL: str = "https://www.pgpf.org/national-debt-clock"
