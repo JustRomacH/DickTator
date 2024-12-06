@@ -158,13 +158,13 @@ class Users(Table):
         if is_atts_were:  # Если до вызова функции у юзера оставались попытки
             return (f"{self.get_size_change_resp(delta)}"
                     f"\nТеперь он равен {user_size} см"
-                    f"\nТы занимаешь {top_place} место в глобальном топе."
+                    f"\nТы занимаешь {top_place} место в глобальном топе"
                     "\n" + self.get_attempts_resp(user_id))
 
         else:
             return (f"{self.get_attempts_resp(user_id).lower()}"
-                    f"\nСейчас твой писюн равен {user_size} см."
-                    f"\nТы занимаешь {top_place} место в глобальном топе.")
+                    f"\nСейчас твой писюн равен {user_size} см"
+                    f"\nТы занимаешь {top_place} место в глобальном топе")
 
     # КОМАНДЫ БОТА
 
