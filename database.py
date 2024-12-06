@@ -128,12 +128,10 @@ class Users(Table):
     # ФУНКЦИИ ДЛЯ !dick
 
     # Изменяет размер писюна на delta см
-    def change_dick_size(
-            self, user_id: int, delta: int,
-    ) -> str:
+    def change_dick_size(self, user_id: int, delta: int) -> str:
         user_size: int = self.get_value("size", "id", user_id)
         self.update_value("size", user_size + delta, "id", user_id)
-        return self.get_dick_resp(user_id, delta)
+        return self.get_dick_resp(user_id, delta=delta)
 
     # Изменяет размер писюна на случайное число см
     def dick_random(self, user_id: int) -> str:
@@ -144,7 +142,7 @@ class Users(Table):
             # Вычитает одну попытку
             self.update_value("attempts", attempts - 1, "id", user_id)
             delta: int = randint(Config.MIN_DICK_DELTA, Config.MAX_DICK_DELTA)
-            return self.change_dick_size(user_id, delta)
+            return self.change_dick_size(user_id, delta=delta)
 
         else:
             return self.get_dick_resp(user_id, is_atts_were=False)
@@ -154,40 +152,32 @@ class Users(Table):
             self, user_id: int, delta: int = 0, is_atts_were: bool = True
     ) -> str:
         user_size: int = self.get_value("size", "id", user_id)
-        top = self.get_sliced_top()
-        top_place: int = self.get_place_in_top(user_id, top)
+        global_top = self.get_sliced_global_top()
+        top_place: int = self.get_place_in_top(user_id, global_top)
 
         if is_atts_were:  # Если до вызова функции у юзера оставались попытки
-            resp = (f"{self.get_size_change_resp(delta)}"
-                    f"\nТеперь он равен {user_size} см."
-                    f"\nТы занимаешь {top_place} место в топе."
+            return (f"{self.get_size_change_resp(delta)}"
+                    f"\nТеперь он равен {user_size} см"
+                    f"\nТы занимаешь {top_place} место в глобальном топе."
                     "\n" + self.get_attempts_resp(user_id))
 
         else:
-            resp = (f"у тебя не осталось попыток."
+            return (f"{self.get_attempts_resp(user_id).lower()}"
                     f"\nСейчас твой писюн равен {user_size} см."
-                    f"\nТы занимаешь {top_place} место в топе.")
-        return resp
+                    f"\nТы занимаешь {top_place} место в глобальном топе.")
 
     # КОМАНДЫ БОТА
 
     # Возвращает текст с количеством попыток
     def get_attempts_resp(self, user_id: int) -> str:
         attempts: int = self.get_attempts(user_id)
-        word_forms: tuple[str, str] = get_words_right_form(attempts)
-        left_form: str = word_forms[0]
-        attempts_form: str = word_forms[1]
+        left_form, attempts_form = get_words_right_form(attempts)
 
         match attempts:
             case 0:
                 return f"У тебя не осталось попыток"
             case _:
                 return f"У тебя {left_form} {attempts} {attempts_form}"
-
-    # Возвращает обрезанный топ
-    def get_sliced_top(self) -> dict[int, int]:
-        top = self.get_top()
-        return self.slice_dict(top, Config.MAX_USERS_IN_TOP)
 
     # ДРУГИЕ ФУНКЦИИ
 
@@ -197,7 +187,7 @@ class Users(Table):
         return self.get_value("attempts", "id", user_id)
 
     # Возвращает общий топ юзеров
-    def get_top(self) -> dict[int, int]:
+    def get_global_top(self) -> dict[int, int]:
         try:
             top_list: list[tuple[int, int]] = self.get_values(
                 "id, size", "size", True
@@ -207,6 +197,11 @@ class Users(Table):
 
         except Exception:
             return dict()
+
+    # Возвращает обрезанный топ
+    def get_sliced_global_top(self) -> dict[int, int]:
+        top = self.get_global_top()
+        return self.slice_dict(top, Config.MAX_USERS_IN_TOP)
 
     # Возвращает позицию юзера в общем топе
     @staticmethod
@@ -253,6 +248,7 @@ class Users(Table):
         delta_time: float = (next_time - cur_time).total_seconds()
         return delta_time
 
+    # Возвращает текст ответа на изменение размера писюна
     @staticmethod
     def get_size_change_resp(delta: int) -> str:
         if delta > 0:
