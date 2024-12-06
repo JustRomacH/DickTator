@@ -3,7 +3,7 @@ import requests
 from config import *
 from random import choice
 from database import Users
-from typing import Sequence
+from typing import Sequence, List
 import discord.app_commands
 from discord import TextChannel
 from discord.ext import commands
@@ -44,7 +44,7 @@ class DickTator(commands.Bot):
         for func in bot_commands:
             command_str: str = f"\n{self.command_prefix}{func.name} - {func.help}"
             commands_list.append(command_str)
-            aliases = sorted(func.aliases, key=len)
+            aliases: list[str] = sorted(func.aliases, key=len)
 
             if not aliases:
                 continue
