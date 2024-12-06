@@ -1,10 +1,10 @@
 import asyncio
-
-import discord.app_commands
 import requests
 from config import *
 from random import choice
 from database import Users
+from typing import Sequence
+import discord.app_commands
 from discord import TextChannel
 from discord.ext import commands
 from bs4 import BeautifulSoup as BS, Tag
@@ -13,8 +13,12 @@ from discord.ext.commands import Context, errors
 
 
 class DickTator(commands.Bot):
-    def __init__(self, command_prefix=Config.PREFIX, intents=Intents.all()):
-        super().__init__(command_prefix, intents=intents)
+    def __init__(self):
+        super().__init__(
+            help_command=None,
+            intents=Intents.all(),
+            command_prefix=Config.PREFIX,
+        )
         self.USERS = Users(
             Config.HOST,
             Config.USER,
@@ -38,19 +42,19 @@ class DickTator(commands.Bot):
         )
 
         for func in bot_commands:
-
-            if func.name == 'help':
-                continue
-
-            command_str: str = f"\n{self.command_prefix}{func.name} - {COMMANDS.get(func.name)}"
+            command_str: str = f"\n{self.command_prefix}{func.name} - {func.help}"
             commands_list.append(command_str)
             aliases = sorted(func.aliases, key=len)
+
+            if not aliases:
+                continue
+
             alias_str = f"\n{self.command_prefix}{func.name} - {", ".join(aliases)}"
             aliases_list.append(alias_str)
 
-        Config.HELP += ("\n\nКоманды:"
+        Config.HELP += ("\n\n**Команды:**"
                         + str().join(commands_list)
-                        + "\n\nАлиасы:"
+                        + "\n\n**Алиасы:**"
                         + str().join(aliases_list))
 
     # КОМАНДЫ
@@ -59,18 +63,27 @@ class DickTator(commands.Bot):
     async def add_commands(self) -> None:
 
         # Выводит информацию о боте
-        @self.command(aliases=["i", "h", "inf", "infa"])
-        async def info(ctx: commands.Context):
+        @self.command(
+            aliases=["i", "h", "inf", "info", "infa"],
+            help="Выводит это сообщение"
+        )
+        async def help(ctx: commands.Context):
             await ctx.channel.send(Config.HELP)
 
         # Скидывает лицо из Stalcraft
-        @self.command(aliases=["sc", "face"])
+        @self.command(
+            aliases=["sc", "face"],
+            help="Скидывает Gif с лицом из Stalcraft"
+        )
         async def stalcraft(ctx: commands.Context) -> None:
             await ctx.message.delete()
             await ctx.channel.send(Config.STALCRAFT_FACE)
 
         # Изменяет размер писюна на рандомное значение
-        @self.command(aliases=["d", "penis", "cock", "4len"])
+        @self.command(
+            aliases=["d", "penis", "cock", "4len"],
+            help="Изменяет размер писюна"
+        )
         async def dick(ctx: commands.Context) -> None:
             user_id: int = ctx.author.id
             mention: str = ctx.author.mention
@@ -78,35 +91,52 @@ class DickTator(commands.Bot):
             await ctx.channel.send(f"{mention}, {resp}")
 
         # Выводит топ писюнов сервера
-        @self.command(aliases=["s", "t", "stats", "stat", "stas"])
+        @self.command(
+            aliases=["s", "t", "stats", "stat", "stas"],
+            help="Выводит топ писюнов сервера"
+        )
         async def top(ctx: commands.Context) -> None:
-            local_top = self.get_local_top(ctx)
+            members: Sequence[Member] = ctx.guild.members
+            local_top = self.get_local_top(members)
             resp = self.get_top_resp(ctx, local_top)
             await ctx.channel.send(resp)
 
         # Выводит глобальный топ писюнов
-        @self.command(aliases=["gs", "gt", "gstats", "gstat", "gstas"])
+        @self.command(
+            aliases=["gs", "gt", "gstats", "gstat", "gstas"],
+            help="Выводит глобальный топ писюнов"
+        )
         async def gtop(ctx: commands.Context) -> None:
-            global_top: dict[int, int] = self.USERS.get_sliced_top()
+            global_top: dict[int, int] = self.USERS.get_sliced_global_top()
             resp = self.get_top_resp(ctx, global_top, True)
             await ctx.channel.send(resp)
 
         # Выводит место в топе сервера
-        @self.command(aliases=["p", "n", "num", "number"])
+        @self.command(
+            aliases=["p", "n", "num", "number"],
+            help="Выводит место в топе сервера"
+        )
         async def place(ctx: commands.Context) -> None:
-            local_top = self.get_local_top(ctx)
+            members: Sequence[Member] = ctx.guild.members
+            local_top = self.get_local_top(members)
             resp = self.get_place_resp(ctx, local_top)
             await ctx.channel.send(resp)
 
         # Выводит место в глобальном топе
-        @self.command(aliases=["gp", "gn", "gnum", "gnumber"])
+        @self.command(
+            aliases=["gp", "gn", "gnum", "gnumber"],
+            help="Выводит место в глобальном топе"
+        )
         async def gplace(ctx: commands.Context) -> None:
-            global_top = self.USERS.get_sliced_top()
+            global_top = self.USERS.get_sliced_global_top()
             resp = self.get_place_resp(ctx, global_top, True)
             await ctx.channel.send(resp)
 
         # Выводит количество оставшихся попыток
-        @self.command(aliases=["a", "att", "atts", "try", "tries"])
+        @self.command(
+            aliases=["a", "att", "atts", "try", "tries"],
+            help="Выводит количество оставшихся попыток"
+        )
         async def attempts(ctx: commands.Context) -> None:
             try:
                 user_id: int = ctx.author.id
@@ -118,7 +148,10 @@ class DickTator(commands.Bot):
                 await ctx.channel.send("Что-то пошло не так...")
 
         # Выводит госдолг США
-        @self.command(aliases=["gd", "nd", "usa", "us", "dolg", "debt"])
+        @self.command(
+            aliases=["gd", "nd", "usa", "us", "dolg", "debt"],
+            help="Выводит госдолг США"
+        )
         async def gosdolg(ctx: commands.Context) -> None:
             try:
                 req: bytes = requests.get(Config.US_DEBT_URL).content
@@ -193,9 +226,9 @@ class DickTator(commands.Bot):
             return "Похоже топ пустой..."
 
         if is_global:
-            resp = "Глобальный топ писюнов:"
+            resp = "**Глобальный топ писюнов:**"
         else:
-            resp: str = "Топ писюнов сервера:"
+            resp: str = "**Топ писюнов сервера:**"
 
         for i, user_id in enumerate(users_top):
 
@@ -219,18 +252,18 @@ class DickTator(commands.Bot):
             place_in_top: int = self.USERS.get_place_in_top(user_id, users_top)
 
             if is_global:
-                return f"{mention}, ты занимаешь {place_in_top} место в глобальном топе"
+                return f"{mention}, ты занимаешь **{place_in_top} место** в глобальном топе"
             else:
-                return f"{mention}, ты занимаешь {place_in_top} место в топе сервера"
+                return f"{mention}, ты занимаешь **{place_in_top} место** в топе сервера"
 
         except Exception:
             return "Что-то пошло не так..."
 
     # Возвращает топ сервера
-    def get_local_top(self, ctx: Context) -> dict[int, int]:
-        global_top: dict[int, int] = self.USERS.get_sliced_top()
+    def get_local_top(self, members: Sequence[Member]) -> dict[int, int]:
+        global_top: dict[int, int] = self.USERS.get_sliced_global_top()
         top_ids = global_top.keys()
-        members_ids: list[int] = [member.id for member in ctx.guild.members]
+        members_ids: list[int] = [member.id for member in members]
         common_ids: list[int] = list(filter(lambda x: x in members_ids, top_ids))
         return {user_id: global_top.get(user_id) for user_id in common_ids}
 
