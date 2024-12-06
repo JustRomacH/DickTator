@@ -3,13 +3,12 @@ import requests
 from config import *
 from random import choice
 from database import Users
-from typing import Sequence, List
-import discord.app_commands
+from typing import Sequence
 from discord import TextChannel
 from discord.ext import commands
 from bs4 import BeautifulSoup as BS, Tag
 from discord import Intents, Member, Message
-from discord.ext.commands import Context, errors
+from discord.ext.commands import Context, Command, errors
 
 
 class DickTator(commands.Bot):
@@ -37,7 +36,7 @@ class DickTator(commands.Bot):
     def add_funcs_info(self) -> None:
         commands_list: list = list()
         aliases_list: list = list()
-        bot_commands: list[discord.ext.commands.Command] = sorted(
+        bot_commands: list[Command] = sorted(
             self.commands, key=lambda f: len(f.name)
         )
 
