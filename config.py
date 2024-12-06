@@ -86,7 +86,3 @@ class Config:
 
 
 setup_logging()
-
-for i in range(1, 101):
-    left, atts = get_words_right_form(i)
-    print(f"{left} {i} {atts}")
