@@ -7,18 +7,6 @@ from datetime import timezone, timedelta
 
 load_dotenv()
 
-COMMANDS: dict = {
-    "info": "выводит это сообщение",
-    "dick": "изменяет размер писюна",
-    "attempts": "выводит количество попыток",
-    "top": "выводит топ игроков сервера",
-    "gtop": "выводит глобальный топ игроков",
-    "stalcraft": "скидывает лицо из Stalcraft",
-    "gosdolg": "выводит госдолг США",
-    "place": "выводит место в топе сервера",
-    "gplace": "выводит место в глобальном топе"
-}
-
 
 # Возвращает слова с правильными окончаниями
 def get_words_right_form(num: int | float) -> tuple[str, str]:
@@ -86,7 +74,8 @@ class Config:
         "ууууууу..."
     )
 
-    HELP: str = f"""Каждый день в {ATTS_ADD_HOUR}:00 всем выдаётся 
+    HELP: str = f"""**Общая информация:**
+Каждый день в {ATTS_ADD_HOUR}:00 всем выдаётся 
 {ATTS_AMOUNT} {get_words_right_form(ATTS_AMOUNT)[1]} увеличить свой писюн. Для этого
 нужно использовать команду {PREFIX}dick. Рандом
 выдаёт числа от {MIN_DICK_DELTA} до {MAX_DICK_DELTA} см. За запуск
