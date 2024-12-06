@@ -10,9 +10,11 @@ load_dotenv()
 
 # Возвращает слова с правильными окончаниями
 def get_words_right_form(num: int | float) -> tuple[str, str]:
-    if num == 1:
+    if num in (11, 12, 13, 14):
+        return "осталось", "попыток"
+    elif num % 10 == 1:
         return "осталась", "попытка"
-    elif num in (2, 3, 4):
+    elif num % 10 in (2, 3, 4):
         return "осталось", "попытки"
     else:
         return "осталось", "попыток"
@@ -84,3 +86,7 @@ class Config:
 
 
 setup_logging()
+
+for i in range(1, 101):
+    left, atts = get_words_right_form(i)
+    print(f"{left} {i} {atts}")
