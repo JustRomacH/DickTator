@@ -24,8 +24,11 @@ class DataBase:
         except Exception as ex:
             logging.error(ex)
 
-        # finally:
-        # asyncio.create_task(self.reconnect_on_error())
+        finally:
+            if __name__ == "__main__":
+                asyncio.run(self.reconnect_on_error())
+            else:
+                asyncio.create_task(self.reconnect_on_error())
 
     # Подключение к базе данных
     def connect_to_db(self):
