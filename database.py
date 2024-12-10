@@ -2,8 +2,8 @@ import asyncio
 from config import *
 from config import Config
 from random import randint
+from datetime import datetime
 from mysql.connector import connect
-from datetime import datetime, timedelta
 
 
 class DataBase:
