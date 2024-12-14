@@ -225,9 +225,9 @@ class DickTator(commands.Bot):
             return "Похоже топ пустой..."
 
         if is_global:
-            resp = "**Глобальный топ писюнов:**"
+            resp = f"**Глобальный топ {Config.MAX_USERS_IN_TOP} писюнов:**"
         else:
-            resp: str = "**Топ писюнов сервера:**"
+            resp: str = f"**Топ {Config.MAX_USERS_IN_TOP} писюнов сервера:**"
 
         for i, user_id in enumerate(users_top):
 
@@ -251,9 +251,9 @@ class DickTator(commands.Bot):
             place_in_top: int = self.USERS.get_place_in_top(user_id, users_top)
 
             if is_global:
-                return f"{mention}, ты занимаешь **{place_in_top} место** в глобальном топе"
+                return f"{mention}, ты занимаешь {place_in_top} место в глобальном топе"
             else:
-                return f"{mention}, ты занимаешь **{place_in_top} место** в топе сервера"
+                return f"{mention}, ты занимаешь {place_in_top} место в топе сервера"
 
         except Exception:
             return "Что-то пошло не так..."

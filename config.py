@@ -47,7 +47,7 @@ class Config:
     ATTS_AMOUNT: int = 1
     MIN_DICK_DELTA: int = 0
     MAX_DICK_DELTA: int = 10
-    MAX_USERS_IN_TOP: int = 10
+    MAX_USERS_IN_TOP: int = 5
     TIMEZONE: timezone = timezone(timedelta(hours=3))
     GIT_REPO: str = Path(__file__).parent.resolve().joinpath(".git")
     US_DEBT_URL: str = "https://www.pgpf.org/national-debt-clock"
