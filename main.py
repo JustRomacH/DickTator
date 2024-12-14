@@ -96,7 +96,7 @@ class DickTator(commands.Bot):
         )
         async def top(ctx: commands.Context) -> None:
             members: Sequence[Member] = ctx.guild.members
-            local_top = self.get_local_top(members)
+            local_top = self.get_sliced_local_top(members)
             resp = self.get_top_resp(ctx, local_top)
             await ctx.channel.send(resp)
 
@@ -127,7 +127,7 @@ class DickTator(commands.Bot):
             help="Выводит место в глобальном топе"
         )
         async def gplace(ctx: commands.Context) -> None:
-            global_top = self.USERS.get_sliced_global_top()
+            global_top = self.USERS.get_global_top()
             resp = self.get_place_resp(ctx, global_top, True)
             await ctx.channel.send(resp)
 
@@ -260,11 +260,15 @@ class DickTator(commands.Bot):
 
     # Возвращает топ сервера
     def get_local_top(self, members: Sequence[Member]) -> dict[int, int]:
-        global_top: dict[int, int] = self.USERS.get_sliced_global_top()
+        global_top: dict[int, int] = self.USERS.get_global_top()
         top_ids = global_top.keys()
         members_ids: list[int] = [member.id for member in members]
         common_ids: list[int] = list(filter(lambda x: x in members_ids, top_ids))
         return {user_id: global_top.get(user_id) for user_id in common_ids}
+
+    def get_sliced_local_top(self, members: Sequence[Member]) -> dict[int, int]:
+        local_top = self.get_local_top(members)
+        return self.USERS.slice_dict(local_top, Config.MAX_USERS_IN_TOP)
 
 
 async def main() -> None:

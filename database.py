@@ -155,7 +155,7 @@ class Users(Table):
             self, user_id: int, delta: int = 0, is_atts_were: bool = True
     ) -> str:
         user_size: int = self.get_value("size", "id", user_id)
-        global_top = self.get_sliced_global_top()
+        global_top = self.get_global_top()
         top_place: int = self.get_place_in_top(user_id, global_top)
 
         if is_atts_were:  # Если до вызова функции у юзера оставались попытки
