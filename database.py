@@ -8,7 +8,7 @@ from mysql.connector import connect
 
 class DataBase:
     def __init__(
-            self, host: str, user: str, password: str, database: str
+            self, host: str, user: str, password: str, database: str, reconnect: bool = True
     ) -> None:
         self.HOST: str = host
         self.USER: str = user
@@ -25,6 +25,10 @@ class DataBase:
             logging.error(ex)
 
         finally:
+
+            if not reconnect:
+                return
+
             if __name__ == "__main__":
                 asyncio.run(self.reconnect_on_error())
             else:
@@ -59,9 +63,9 @@ class DataBase:
 
 class Table(DataBase):
     def __init__(
-            self, host: str, user: str, password: str, database: str, table: str
+            self, host: str, user: str, password: str, database: str, table: str, reconnect: bool = True
     ) -> None:
-        super().__init__(host, user, password, database)
+        super().__init__(host, user, password, database, reconnect)
         self.TABLE: str = table
 
     # МЕТОДЫ ДЛЯ РАБОТЫ С ТАБЛИЦЕЙ
@@ -95,9 +99,9 @@ class Table(DataBase):
 
 class Users(Table):
     def __init__(
-            self, host: str, user: str, password: str, database: str
+            self, host: str, user: str, password: str, database: str, reconnect: bool = True
     ) -> None:
-        super().__init__(host, user, password, database, "users")
+        super().__init__(host, user, password, database, "users", reconnect)
 
     # Добавляет юзера в таблицу
     def add_user(self, user_id: int) -> None:
@@ -213,24 +217,24 @@ class Users(Table):
         return numbered_top.get(user_id)
 
     # Добавляет 1 попытку всем юзерам каждый день
-    async def add_attempts(self) -> None:
+    async def add_attempts_coroutine(self) -> None:
         try:
             while True:
                 # Оставшееся время до добавления попыток
                 time_delta: float = self.get_time_delta(Config.ATTS_ADD_HOUR)
                 await asyncio.sleep(time_delta)  # Ждёт назначенное время
-                users: list[tuple[int, int]] = self.get_values("id, attempts")
-
-                for user in users:
-                    user_id: int = user[0]
-                    attempts: int = user[1]
-                    query: str = f"UPDATE {self.TABLE} SET attempts = %s WHERE id = %s"
-                    self.cursor.execute(query, (attempts + Config.ATTS_AMOUNT, user_id))
-
+                self.add_attempts()
                 logging.info("Attempts added")
 
         except Exception as ex:
             logging.error(ex)
+
+    def add_attempts(self):
+        users: list[tuple[int, int]] = self.get_values("id, attempts")
+
+        for user_id, attempts in users:
+            query: str = f"UPDATE {self.TABLE} SET attempts = %s WHERE id = %s"
+            self.cursor.execute(query, (attempts + Config.ATTS_AMOUNT, user_id))
 
     # Возвращает кол-во секунд до времени добавления попыток
     @staticmethod
@@ -273,8 +277,9 @@ def main():
         Config.HOST,
         Config.USER,
         Config.PASSWORD,
-        Config.DATABASE
-    )
+        Config.DATABASE,
+        reconnect=False
+    ).add_attempts()
 
 
 if __name__ == "__main__":

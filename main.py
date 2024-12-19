@@ -30,7 +30,7 @@ class DickTator(commands.Bot):
         await self.add_commands()
         self.add_funcs_info()
         logging.info("Bot started...")
-        await self.USERS.add_attempts()
+        await self.USERS.add_attempts_coroutine()
 
     # Добавляет информацию о функциях в HELP в config
     def add_funcs_info(self) -> None:
