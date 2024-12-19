@@ -1,6 +1,5 @@
 import logging
 from os import getenv
-from pathlib import Path
 from dotenv import load_dotenv
 from dataclasses import dataclass
 from datetime import timezone, timedelta
@@ -49,7 +48,6 @@ class Config:
     MAX_DICK_DELTA: int = 10
     MAX_USERS_IN_TOP: int = 5
     TIMEZONE: timezone = timezone(timedelta(hours=3))
-    GIT_REPO: str = Path(__file__).parent.resolve().joinpath(".git")
     US_DEBT_URL: str = "https://www.pgpf.org/national-debt-clock"
     US_DEBT_GIF: str = "https://media1.tenor.com/m/inHdJJ90TKEAAAAd/%D0%B4%D0%BE%D0%BB%D0%B3-%D1%81%D1%88%D0%B0.gif"
     STALCRAFT_FACE: str = "https://tenor.com/view/stalcraft-%D1%81%D0%BD%D1%8E%D1%81-minecraft-gif-19986730"
@@ -77,13 +75,13 @@ class Config:
         "ууууууу..."
     )
 
-    HELP_RESPONSE: str = f"""**Общая информация:**
-Каждый день в {ATTEMPTS_ADD_HOUR}:00 всем выдаётся 
-{ATTEMPTS_AMOUNT} {get_words_right_form(ATTEMPTS_AMOUNT)[1]} увеличить свой писюн. Для этого
-нужно использовать команду {PREFIX}dick. Рандом
-выдаёт числа от {MIN_DICK_DELTA} до {MAX_DICK_DELTA} см. За запуск
-Доты, Unturned и т.п. твой писюн
-уменьшается на {abs(FINE)} см."""
+    HELP_RESPONSE: str = ("**Общая информация:**"
+                          f"Каждый день в {ATTEMPTS_ADD_HOUR}:00 всем выдаётся"
+                          f"{ATTEMPTS_AMOUNT} {get_words_right_form(ATTEMPTS_AMOUNT)[1]} увеличить свой писюн. "
+                          f"Для этогонужно использовать команду {PREFIX}dick."
+                          f"Рандом выдаёт числа от {MIN_DICK_DELTA} до {MAX_DICK_DELTA} см."
+                          f"Запуск Доты, Unturned, Stalcraft и т.п. запрещён."
+                          f"За нарушение твой писюн уменьшается на {abs(FINE)} см.")
 
 
 setup_logging()
