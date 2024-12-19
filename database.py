@@ -58,7 +58,7 @@ class DataBase:
                 logging.error(ex)
 
             finally:
-                await asyncio.sleep(Config.CONN_RETRY_DELAY)
+                await asyncio.sleep(Config.RECONNECT_DELAY)
 
 
 class Table(DataBase):
@@ -221,7 +221,7 @@ class Users(Table):
         try:
             while True:
                 # Оставшееся время до добавления попыток
-                time_delta: float = self.get_time_delta(Config.ATTS_ADD_HOUR)
+                time_delta: float = self.get_time_delta(Config.ATTEMPTS_ADD_HOUR)
                 await asyncio.sleep(time_delta)  # Ждёт назначенное время
                 self.add_attempts()
                 logging.info("Attempts added")
@@ -234,7 +234,7 @@ class Users(Table):
 
         for user_id, attempts in users:
             query: str = f"UPDATE {self.TABLE} SET attempts = %s WHERE id = %s"
-            self.cursor.execute(query, (attempts + Config.ATTS_AMOUNT, user_id))
+            self.cursor.execute(query, (attempts + Config.ATTEMPTS_AMOUNT, user_id))
 
     # Возвращает кол-во секунд до времени добавления попыток
     @staticmethod

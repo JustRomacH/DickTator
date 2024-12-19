@@ -32,7 +32,7 @@ class DickTator(commands.Bot):
         logging.info("Bot started...")
         await self.USERS.add_attempts_coroutine()
 
-    # Добавляет информацию о функциях в HELP в config
+    # Добавляет информацию о функциях в HELP_RESPONSE в config
     def add_funcs_info(self) -> None:
         commands_list: list = list()
         aliases_list: list = list()
@@ -51,10 +51,10 @@ class DickTator(commands.Bot):
             alias_str = f"\n{self.command_prefix}{func.name} - {", ".join(aliases)}"
             aliases_list.append(alias_str)
 
-        Config.HELP += ("\n\n**Команды:**"
-                        + str().join(commands_list)
-                        + "\n\n**Алиасы:**"
-                        + str().join(aliases_list))
+        Config.HELP_RESPONSE += ("\n\n**Команды:**"
+                                 + str().join(commands_list)
+                                 + "\n\n**Алиасы:**"
+                                 + str().join(aliases_list))
 
     # КОМАНДЫ
 
@@ -67,7 +67,7 @@ class DickTator(commands.Bot):
             help="Выводит это сообщение"
         )
         async def help(ctx: commands.Context):
-            await ctx.channel.send(Config.HELP)
+            await ctx.channel.send(Config.HELP_RESPONSE)
 
         # Скидывает лицо из Stalcraft
         @self.command(
@@ -189,7 +189,7 @@ class DickTator(commands.Bot):
         try:
             channel: TextChannel = after.guild.text_channels[0]
 
-            for ban_act in Config.BANNED_ACT:
+            for ban_act in Config.BANNED_ACTIVITIES:
 
                 # Если до этого была запрещённая активность
                 if any(ban_act in prev_act.name.lower() for prev_act in before.activities):
@@ -204,7 +204,7 @@ class DickTator(commands.Bot):
                     await channel.send(
                         f"{after.mention}, {choice(Config.LEAVE_PHRASES)}"
                     )
-                    resp: str = self.USERS.change_dick_size(after.id, Config.DICK_PENALTY)
+                    resp: str = self.USERS.change_dick_size(after.id, Config.FINE)
                     await channel.send(f"{after.mention}, {resp}")
                     logging.info(f"{after.display_name} was punished for {cur_act.name}")
 
