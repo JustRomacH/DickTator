@@ -76,12 +76,12 @@ class Config:
     )
 
     HELP_RESPONSE: str = ("**Общая информация:**"
-                          f"Каждый день в {ATTEMPTS_ADD_HOUR}:00 всем выдаётся"
-                          f"{ATTEMPTS_AMOUNT} {get_words_right_form(ATTEMPTS_AMOUNT)[1]} увеличить свой писюн. "
-                          f"Для этогонужно использовать команду {PREFIX}dick."
-                          f"Рандом выдаёт числа от {MIN_DICK_DELTA} до {MAX_DICK_DELTA} см."
-                          f"Запуск Доты, Unturned, Stalcraft и т.п. запрещён."
-                          f"За нарушение твой писюн уменьшается на {abs(FINE)} см.")
+                          f"\nКаждый день в {ATTEMPTS_ADD_HOUR}:00 всем выдаётся"
+                          f"\n{ATTEMPTS_AMOUNT} {get_words_right_form(ATTEMPTS_AMOUNT)[1]} увеличить свой писюн. "
+                          f"\nДля этого нужно использовать команду {PREFIX}dick."
+                          f"\nРандом выдаёт числа от {MIN_DICK_DELTA} до {MAX_DICK_DELTA} см."
+                          f"\nЗапуск Доты, Unturned, Stalcraft и т.п. запрещён."
+                          f"\nЗа нарушение твой писюн уменьшается на {abs(FINE)} см.")
 
 
 setup_logging()
