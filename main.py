@@ -224,10 +224,14 @@ class DickTator(commands.Bot):
         if not users_top:  # Если топ пустой
             return "Похоже топ пустой..."
 
-        if is_global:
-            resp = f"**Глобальный топ {Config.MAX_USERS_IN_TOP} писюнов:**"
+        if not is_global:
+            if len(users_top.keys()) < Config.MAX_USERS_IN_TOP:
+                resp: str = f"**Топ писюнов сервера:**"
+            else:
+                resp: str = f"**Топ {Config.MAX_USERS_IN_TOP} писюнов сервера:**"
+
         else:
-            resp: str = f"**Топ {Config.MAX_USERS_IN_TOP} писюнов сервера:**"
+            resp = f"**Топ {Config.MAX_USERS_IN_TOP} писюнов:**"
 
         for i, user_id in enumerate(users_top):
 
