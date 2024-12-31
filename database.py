@@ -136,7 +136,7 @@ class Users(Table):
 
     # Изменяет размер писюна на delta см
     def change_dick_size(self, user_id: int, delta: int) -> str:
-        user_size: int = self.get_value("size", "id", user_id)
+        user_size: int = self.get_dick_size(user_id)
         self.update_value("size", user_size + delta, "id", user_id)
         return self.get_dick_resp(user_id, delta=delta)
 
@@ -158,7 +158,7 @@ class Users(Table):
     def get_dick_resp(
             self, user_id: int, delta: int = 0, is_atts_were: bool = True
     ) -> str:
-        user_size: int = self.get_value("size", "id", user_id)
+        user_size: int = self.get_dick_size(user_id)
         global_top = self.get_global_top()
         top_place: int = self.get_place_in_top(user_id, global_top)
 
@@ -186,12 +186,22 @@ class Users(Table):
             case _:
                 return f"У тебя {left_form} {attempts} {attempts_form}"
 
+    # Возвращает текст с размером писюна
+    def get_dick_size_resp(self, user_id: int) -> str:
+        size: int = self.get_dick_size(user_id)
+        return f"Сейчас твой писюн размером {size} см"
+
     # ДРУГИЕ ФУНКЦИИ
 
     # Возвращает количество оставшихся попыток у юзера
     def get_attempts(self, user_id: int) -> int:
         self.add_user_if_not_exist(user_id)
         return self.get_value("attempts", "id", user_id)
+
+    # Возвращает размер писюна юзера
+    def get_dick_size(self, user_id: int) -> int:
+        self.add_user_if_not_exist(user_id)
+        return self.get_value("size", "id", user_id)
 
     # Возвращает общий топ юзеров
     def get_global_top(self) -> dict[int, int]:

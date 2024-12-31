@@ -91,7 +91,7 @@ class DickTator(commands.Bot):
 
         # Выводит топ писюнов сервера
         @self.command(
-            aliases=["s", "t", "stats", "stat", "stas"],
+            aliases=["t", "stats", "stat", "stas"],
             help="Выводит топ писюнов сервера"
         )
         async def top(ctx: commands.Context) -> None:
@@ -142,6 +142,21 @@ class DickTator(commands.Bot):
                 mention: str = ctx.author.mention
                 attempts_resp: str = self.USERS.get_attempts_resp(user_id)
                 await ctx.channel.send(f"{mention}, {attempts_resp.lower()}")
+
+            except Exception:
+                await ctx.channel.send("Что-то пошло не так...")
+
+        # Выводит размер писюна
+        @self.command(
+            aliases=["s"],
+            help="Выводит размер писюна"
+        )
+        async def size(ctx: commands.Context) -> None:
+            try:
+                user_id: int = ctx.author.id
+                mention: str = ctx.author.mention
+                dick_size_resp: str = self.USERS.get_dick_size_resp(user_id)
+                await ctx.channel.send(f"{mention}, {dick_size_resp.lower()}")
 
             except Exception:
                 await ctx.channel.send("Что-то пошло не так...")
