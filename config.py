@@ -46,7 +46,7 @@ class Config:
     ATTEMPTS_AMOUNT: int = 1
     MIN_DICK_DELTA: int = 0
     MAX_DICK_DELTA: int = 10
-    MAX_USERS_IN_TOP: int = 5
+    MAX_USERS_IN_TOP: int = 10
     TIMEZONE: timezone = timezone(timedelta(hours=3))
     US_DEBT_URL: str = "https://www.pgpf.org/national-debt-clock"
     US_DEBT_GIF: str = "https://media1.tenor.com/m/inHdJJ90TKEAAAAd/%D0%B4%D0%BE%D0%BB%D0%B3-%D1%81%D1%88%D0%B0.gif"
