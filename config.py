@@ -61,6 +61,7 @@ class Config:
         "zenless",
         "destiny",
         "warframe",
+        "space station",
         "zzz"
     )
 
