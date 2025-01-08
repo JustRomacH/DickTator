@@ -97,7 +97,9 @@ class DickTator(commands.Bot):
         async def top(ctx: commands.Context) -> None:
             members: Sequence[Member] = ctx.guild.members
             local_top = self.get_sliced_local_top(members)
-            resp = self.get_top_resp(ctx, local_top)
+            if not local_top:
+                await ctx.channel.send("Похоже топ пустой...")
+            resp: str = self.get_local_top_resp(ctx, local_top)
             await ctx.channel.send(resp)
 
         # Выводит глобальный топ писюнов
@@ -107,7 +109,9 @@ class DickTator(commands.Bot):
         )
         async def gtop(ctx: commands.Context) -> None:
             global_top: dict[int, int] = self.USERS.get_sliced_global_top()
-            resp = self.get_top_resp(ctx, global_top, True)
+            if not global_top:
+                await ctx.channel.send("Похоже топ пустой...")
+            resp: str = self.get_global_top_resp(global_top)
             await ctx.channel.send(resp)
 
         # Выводит место в топе сервера
@@ -235,28 +239,36 @@ class DickTator(commands.Bot):
 
     # ДРУГИЕ ФУНКЦИИ
 
-    def get_top_resp(self, ctx: Context, users_top: dict[int, int], is_global: bool = False) -> str:
-        if not users_top:  # Если топ пустой
-            return "Похоже топ пустой..."
-
-        if not is_global:
-            if len(users_top.keys()) < Config.MAX_USERS_IN_TOP:
-                resp: str = f"**Топ писюнов сервера:**"
-            else:
-                resp: str = f"**Топ {Config.MAX_USERS_IN_TOP} писюнов сервера:**"
-
+    @staticmethod
+    def get_local_top_resp(ctx: Context, users_top: dict[int, int]) -> str:
+        if len(users_top.keys()) < Config.MAX_USERS_IN_TOP:
+            resp: str = f"**Топ писюнов сервера:**"
         else:
-            resp = f"**Топ {Config.MAX_USERS_IN_TOP} писюнов:**"
+            resp: str = f"**Топ {Config.MAX_USERS_IN_TOP} писюнов сервера:**"
 
         for i, user_id in enumerate(users_top):
-
-            if is_global:
-                user_name: str = self.get_user(user_id).display_name
-            else:
+            try:
                 user_name: str = ctx.guild.get_member(user_id).display_name
+                user_size: int = users_top.get(user_id)
+                resp += f"\n{i + 1}. {user_name} — {user_size} см"
+            except Exception:
+                continue
 
-            user_size: int = users_top.get(user_id)
-            resp += f"\n{i + 1}. {user_name} — {user_size} см"
+        return resp
+
+    def get_global_top_resp(self, users_top: dict[int, int]) -> str:
+        if len(users_top.keys()) < Config.MAX_USERS_IN_TOP:
+            resp: str = f"**Топ писюнов:**"
+        else:
+            resp: str = f"**Топ {Config.MAX_USERS_IN_TOP} писюнов:**"
+
+        for i, user_id in enumerate(users_top):
+            try:
+                user_name: str = self.get_user(user_id).display_name
+                user_size: int = users_top.get(user_id)
+                resp += f"\n{i + 1}. {user_name} — {user_size} см"
+            except Exception:
+                continue
 
         return resp
 
