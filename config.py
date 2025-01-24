@@ -53,7 +53,6 @@ class Config:
     STALCRAFT_FACE: str = "https://tenor.com/view/stalcraft-%D1%81%D0%BD%D1%8E%D1%81-minecraft-gif-19986730"
 
     BANNED_ACTIVITIES: tuple[str] = (
-        "stalcraft",
         "dota",
         "unturned",
         "genshin",
@@ -61,7 +60,6 @@ class Config:
         "zenless",
         "destiny",
         "warframe",
-        "space station",
         "zzz"
     )
 
