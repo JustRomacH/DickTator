@@ -235,6 +235,8 @@ class DickTator(commands.Bot):
 
                     # Рассылаем сообщения по всем серверам
                     for guild in self.guilds:
+                        if not after in guild.members:
+                            continue
                         channel: TextChannel = guild.system_channel or guild.text_channels[0]
                         await channel.send(f"{after.mention}, {choice(Config.LEAVE_PHRASES)}")
                         await channel.send(f"{after.mention}, {resp}")
