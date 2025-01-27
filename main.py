@@ -24,6 +24,7 @@ class DickTator(commands.Bot):
             Config.PASSWORD,
             Config.DATABASE
         )
+        self.processed_activities: {int: set} = {}
 
     # Срабатывает при запуске бота
     async def on_ready(self):
@@ -206,25 +207,38 @@ class DickTator(commands.Bot):
 
     async def on_presence_update(self, before: Member, after: Member) -> None:
         try:
-            channel: TextChannel = after.guild.text_channels[0]
+            # Инициализация обработанных активностей для пользователя
+            if after.id not in self.processed_activities:
+                self.processed_activities[after.id] = set()
 
             for ban_act in Config.BANNED_ACTIVITIES:
-
                 # Если до этого была запрещённая активность
                 if any(ban_act in prev_act.name.lower() for prev_act in before.activities):
                     continue
 
                 for cur_act in after.activities:
-
                     if not ban_act in cur_act.name.lower():
                         continue
 
+                    start_time = cur_act.timestamps.get("start")
+                    activity_key = (cur_act.name.lower(), start_time)
+
+                    # Если активность уже обработана, пропускаем
+                    if activity_key in self.processed_activities[after.id]:
+                        continue
+
+                    # Добавляем активность в список обработанных
+                    self.processed_activities[after.id].add(activity_key)
+
                     self.USERS.add_user_if_not_exist(after.id)
-                    await channel.send(
-                        f"{after.mention}, {choice(Config.LEAVE_PHRASES)}"
-                    )
                     resp: str = self.USERS.change_dick_size(after.id, Config.FINE)
-                    await channel.send(f"{after.mention}, {resp}")
+
+                    # Рассылаем сообщения по всем серверам
+                    for guild in self.guilds:
+                        channel: TextChannel = guild.system_channel or guild.text_channels[0]
+                        await channel.send(f"{after.mention}, {choice(Config.LEAVE_PHRASES)}")
+                        await channel.send(f"{after.mention}, {resp}")
+
                     logging.info(f"{after.display_name} was punished for {cur_act.name}")
 
         except Exception as ex:
