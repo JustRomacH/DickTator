@@ -4,11 +4,10 @@ from config import *
 from random import choice
 from database import Users
 from typing import Sequence
-from discord import TextChannel
 from discord.ext import commands
 from bs4 import BeautifulSoup as BS, Tag
-from discord import Intents, Member, Message
 from discord.ext.commands import Context, Command, errors
+from discord import Intents, Member, User, Message, TextChannel, Embed
 
 
 class DickTator(commands.Bot):
@@ -18,6 +17,8 @@ class DickTator(commands.Bot):
             intents=Intents.all(),
             command_prefix=Config.PREFIX,
         )
+        self.commands_list: list = list()
+        self.aliases_list: list = list()
         self.USERS = Users(
             Config.HOST,
             Config.USER,
@@ -35,27 +36,21 @@ class DickTator(commands.Bot):
 
     # Добавляет информацию о функциях в HELP_RESPONSE в config
     def add_funcs_info(self) -> None:
-        commands_list: list = list()
-        aliases_list: list = list()
+
         bot_commands: list[Command] = sorted(
             self.commands, key=lambda f: len(f.name)
         )
 
         for func in bot_commands:
-            command_str: str = f"\n{self.command_prefix}{func.name} - {func.help}"
-            commands_list.append(command_str)
+            command_str: str = f"\n{self.command_prefix}{func.name} - {func.help}."
+            self.commands_list.append(command_str)
             aliases: list[str] = sorted(func.aliases, key=len)
 
             if not aliases:
                 continue
 
             alias_str = f"\n{self.command_prefix}{func.name} - {", ".join(aliases)}"
-            aliases_list.append(alias_str)
-
-        Config.HELP_RESPONSE += ("\n\n**Команды:**"
-                                 + str().join(commands_list)
-                                 + "\n\n**Алиасы:**"
-                                 + str().join(aliases_list))
+            self.aliases_list.append(alias_str)
 
     # КОМАНДЫ
 
@@ -68,7 +63,20 @@ class DickTator(commands.Bot):
             help="Выводит это сообщение"
         )
         async def help(ctx: commands.Context):
-            await ctx.channel.send(Config.HELP_RESPONSE)
+            embed = Embed(
+                title="Общая информация:",
+                description=Config.HELP_RESPONSE,
+                color=Config.EMBED_COLOR
+            )
+            embed.add_field(
+                name="Команды:",
+                value=str().join(self.commands_list)
+            )
+            embed.add_field(
+                name="Алиасы:",
+                value=str().join(self.aliases_list)
+            )
+            await ctx.channel.send(embed=embed)
 
         # Скидывает лицо из Stalcraft
         @self.command(
@@ -98,10 +106,17 @@ class DickTator(commands.Bot):
         async def top(ctx: commands.Context) -> None:
             members: Sequence[Member] = ctx.guild.members
             local_top = self.get_sliced_local_top(members)
+
             if not local_top:
                 await ctx.channel.send("Похоже топ пустой...")
-            resp: str = self.get_local_top_resp(ctx, local_top)
-            await ctx.channel.send(resp)
+
+            title, users_top = self.get_local_top_resp(ctx, local_top)
+            embed = Embed(
+                title=title,
+                description=users_top,
+                color=Config.EMBED_COLOR
+            )
+            await ctx.channel.send(embed=embed)
 
         # Выводит глобальный топ писюнов
         @self.command(
@@ -110,10 +125,17 @@ class DickTator(commands.Bot):
         )
         async def gtop(ctx: commands.Context) -> None:
             global_top: dict[int, int] = self.USERS.get_sliced_global_top()
+
             if not global_top:
                 await ctx.channel.send("Похоже топ пустой...")
-            resp: str = self.get_global_top_resp(global_top)
-            await ctx.channel.send(resp)
+
+            title, users_top = self.get_global_top_resp(global_top)
+            embed = Embed(
+                title=title,
+                description=users_top,
+                color=Config.EMBED_COLOR
+            )
+            await ctx.channel.send(embed=embed)
 
         # Выводит место в топе сервера
         @self.command(
@@ -256,37 +278,49 @@ class DickTator(commands.Bot):
     # ДРУГИЕ ФУНКЦИИ
 
     @staticmethod
-    def get_local_top_resp(ctx: Context, users_top: dict[int, int]) -> str:
+    def get_local_top_resp(ctx: Context, users_top: dict[int, int]) -> tuple[str, str]:
         if len(users_top.keys()) < Config.MAX_USERS_IN_TOP:
-            resp: str = f"**Топ писюнов сервера:**"
+            title: str = f"Топ писюнов сервера:"
         else:
-            resp: str = f"**Топ {Config.MAX_USERS_IN_TOP} писюнов сервера:**"
+            title: str = f"Топ {Config.MAX_USERS_IN_TOP} писюнов сервера:"
+
+        top: str = str()
 
         for i, user_id in enumerate(users_top):
             try:
-                user_name: str = ctx.guild.get_member(user_id).display_name
+                user: Member = ctx.guild.get_member(user_id)
+                user_name = user.display_name
                 user_size: int = users_top.get(user_id)
-                resp += f"\n{i + 1}. {user_name} — {user_size} см"
+                top += f"\n{i + 1}. **{user_name} — {user_size} см**"
+
             except Exception:
                 continue
 
-        return resp
+        return title, top
 
-    def get_global_top_resp(self, users_top: dict[int, int]) -> str:
+    def get_global_top_resp(self, users_top: dict[int, int]) -> tuple[str, str]:
         if len(users_top.keys()) < Config.MAX_USERS_IN_TOP:
-            resp: str = f"**Топ писюнов:**"
+            title: str = f"Топ писюнов:"
         else:
-            resp: str = f"**Топ {Config.MAX_USERS_IN_TOP} писюнов:**"
+            title: str = f"Топ {Config.MAX_USERS_IN_TOP} писюнов:"
+
+        top: str = str()
 
         for i, user_id in enumerate(users_top):
             try:
-                user_name: str = self.get_user(user_id).display_name
-                user_size: int = users_top.get(user_id)
-                resp += f"\n{i + 1}. {user_name} — {user_size} см"
-            except Exception:
-                continue
+                user: User = self.get_user(user_id)
 
-        return resp
+                if not user:
+                    self.USERS.remove_string("id", user_id)
+
+                user_name: str = user.display_name
+                user_size: int = users_top.get(user_id)
+                top += f"\n{i + 1}. **{user_name} — {user_size} см**"
+
+            except Exception as ex:
+                logging.error(ex)
+
+        return title, top
 
     # Возвращает текст с местом в топе
     def get_place_resp(
