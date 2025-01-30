@@ -96,6 +96,11 @@ class Table(DataBase):
         query: str = f"UPDATE {self.TABLE} SET {value} = %s WHERE {cond} = %s"
         self.cursor.execute(query, (new_value, cond_value))
 
+    # Удаляет выбранную строку
+    def remove_string(self, cond: str, cond_value: any) -> None:
+        query: str = f"DELETE FROM {self.TABLE} WHERE {cond} = %s"
+        self.cursor.execute(query, (cond_value,))
+
 
 class Users(Table):
     def __init__(
@@ -209,7 +214,10 @@ class Users(Table):
             top_list: list[tuple[int, int]] = self.get_values(
                 "id, size", "size", True
             )
-            top_dict: dict[int, int] = {user_inf[0]: user_inf[1] for user_inf in top_list}
+            top_dict: dict[int, int] = {
+                user_inf[0]: user_inf[1]
+                for user_inf in top_list
+            }
             return top_dict
 
         except Exception:
