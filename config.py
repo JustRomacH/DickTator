@@ -40,6 +40,7 @@ class Config:
     USER: str = getenv("USER")
     PASSWORD: str = getenv("PASSWORD")
     DATABASE: str = getenv("DATABASE")
+    EMBED_COLOR: hex = 0xffb347
     RECONNECT_DELAY: int = 30
     FINE: int = -10
     ATTEMPTS_ADD_HOUR: int = 17
@@ -74,12 +75,11 @@ class Config:
         "ууууууу..."
     )
 
-    HELP_RESPONSE: str = ("**Общая информация:**"
-                          f"\nКаждый день в {ATTEMPTS_ADD_HOUR}:00 всем выдаётся"
+    HELP_RESPONSE: str = (f"\nКаждый день в {ATTEMPTS_ADD_HOUR}:00 всем выдаётся"
                           f"\n{ATTEMPTS_AMOUNT} {get_words_right_form(ATTEMPTS_AMOUNT)[1]} увеличить свой писюн. "
                           f"\nДля этого нужно использовать команду {PREFIX}dick."
                           f"\nРандом выдаёт числа от {MIN_DICK_DELTA} до {MAX_DICK_DELTA} см."
-                          f"\nЗапуск Доты, Unturned, Stalcraft и т.п. запрещён."
+                          f"\nЗапуск Доты, Unturned, Геншина и т.п. запрещён."
                           f"\nЗа нарушение твой писюн уменьшается на {abs(FINE)} см.")
 
 
