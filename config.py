@@ -1,34 +1,9 @@
-import logging
 from os import getenv
 from dotenv import load_dotenv
 from dataclasses import dataclass
-from datetime import timezone, timedelta
+from utils import get_words_right_form
 
 load_dotenv()
-
-
-# Возвращает слова с правильными окончаниями
-def get_words_right_form(num: int | float) -> tuple[str, str]:
-    if 11 <= num % 100 <= 14:
-        return "осталось", "попыток"
-    match num % 10:
-        case 1:
-            return "осталась", "попытка"
-        case 2 | 3 | 4:
-            return "осталось", "попытки"
-        case _:
-            return "осталось", "попыток"
-
-
-def setup_logging() -> None:
-    format_str: str = "[%(asctime)s] [%(levelname)s] %(message)s"
-    logging.basicConfig(
-        filename="dicktator.log",
-        filemode="a",
-        format=format_str,
-        level=logging.INFO,
-        datefmt='%d-%m-%Y %H:%M'
-    )
 
 
 # Основные переменные бота
@@ -48,7 +23,6 @@ class Config:
     MIN_DICK_DELTA: int = 0
     MAX_DICK_DELTA: int = 10
     MAX_USERS_IN_TOP: int = 10
-    TIMEZONE: timezone = timezone(timedelta(hours=3))
     US_DEBT_URL: str = "https://www.pgpf.org/national-debt-clock"
     US_DEBT_GIF: str = "https://media1.tenor.com/m/inHdJJ90TKEAAAAd/%D0%B4%D0%BE%D0%BB%D0%B3-%D1%81%D1%88%D0%B0.gif"
     STALCRAFT_FACE: str = "https://tenor.com/view/stalcraft-%D1%81%D0%BD%D1%8E%D1%81-minecraft-gif-19986730"
@@ -83,4 +57,7 @@ class Config:
                           f"\nЗа нарушение твой писюн уменьшается на {abs(FINE)} см.")
 
 
-setup_logging()
+@dataclass
+class LoggerConfig:
+    FILENAME: str = "dicktator.log"
+    FILEMODE: str = "a"
