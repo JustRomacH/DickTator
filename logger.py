@@ -68,3 +68,11 @@ class Logger:
         caller: str = self.get_caller()
         log: str = f"[-] [{time}] {caller} >>> {message}"
         self.output(log, "red")
+
+
+def main():
+    logger = Logger()
+
+
+if __name__ == "__main__":
+    main()
