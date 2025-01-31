@@ -1,12 +1,14 @@
 import asyncio
 import requests
+from utils import *
 from config import *
+from logger import Logger
 from random import choice
-from database import Users
 from typing import Sequence
+from database import UsersTable
 from discord.ext import commands
 from bs4 import BeautifulSoup as BS, Tag
-from discord.ext.commands import Context, Command, errors
+from discord.ext.commands import Context, errors
 from discord import Intents, Member, User, Message, TextChannel, Embed
 
 
@@ -19,49 +21,46 @@ class DickTator(commands.Bot):
         )
         self.commands_list: list = list()
         self.aliases_list: list = list()
-        self.USERS = Users(
+        self.processed_activities: {int: set} = dict()
+        self.LOGGER = Logger()
+        self.USERS = UsersTable(
             Config.HOST,
             Config.USER,
             Config.PASSWORD,
             Config.DATABASE
         )
-        self.processed_activities: {int: set} = {}
 
     # Срабатывает при запуске бота
     async def on_ready(self):
+        self.LOGGER.debug("Bot is starting...")
         await self.add_commands()
         self.add_funcs_info()
-        logging.info("Bot started...")
+        self.LOGGER.success("Bot started")
         await self.USERS.add_attempts_coroutine()
 
     # Добавляет информацию о функциях в HELP_RESPONSE в config
     def add_funcs_info(self) -> None:
-
-        bot_commands: list[Command] = sorted(
-            self.commands, key=lambda f: len(f.name)
-        )
+        self.LOGGER.debug("Adding functions info...")
+        bot_commands = sorted(self.commands, key=lambda f: len(f.name))
 
         for func in bot_commands:
-            command_str: str = f"\n{self.command_prefix}{func.name} - {func.help}."
+            command_str = f"\n{self.command_prefix}{func.name} - {func.help}."
             self.commands_list.append(command_str)
-            aliases: list[str] = sorted(func.aliases, key=len)
+            aliases = sorted(func.aliases, key=len)
 
-            if not aliases:
-                continue
+            if aliases:
+                alias_str = f"\n{self.command_prefix}{func.name} - {", ".join(aliases)}"
+                self.aliases_list.append(alias_str)
 
-            alias_str = f"\n{self.command_prefix}{func.name} - {", ".join(aliases)}"
-            self.aliases_list.append(alias_str)
+        self.LOGGER.debug("Functions info added")
 
     # КОМАНДЫ
 
     # Добавляет команды
     async def add_commands(self) -> None:
+        self.LOGGER.debug("Adding commands...")
 
-        # Выводит информацию о боте
-        @self.command(
-            aliases=["i", "h", "inf", "info", "infa"],
-            help="Выводит это сообщение"
-        )
+        @self.command(aliases=["i", "h", "inf", "info", "infa"], help="Выводит это сообщение")
         async def help(ctx: commands.Context):
             embed = Embed(
                 title="Общая информация:",
@@ -77,6 +76,8 @@ class DickTator(commands.Bot):
                 value=str().join(self.aliases_list)
             )
             await ctx.channel.send(embed=embed)
+
+        self.LOGGER.success("Commands added")
 
         # Скидывает лицо из Stalcraft
         @self.command(
@@ -202,15 +203,15 @@ class DickTator(commands.Bot):
                 await ctx.channel.send(
                     f"Госдолг США составляет ${debt}"
                 )
-                logging.info("Got US Government Debt")
+                self.LOGGER.debug("Got US Government Debt")
                 await ctx.channel.send(Config.US_DEBT_GIF)
 
             except AttributeError as ex:
-                logging.warning(ex)
+                self.LOGGER.warning(ex)
                 await ctx.channel.send("Произошла ошибка...")
 
             except Exception as ex:
-                logging.error(ex)
+                self.LOGGER.error(ex)
 
     # ИВЕНТЫ
 
@@ -263,22 +264,26 @@ class DickTator(commands.Bot):
                         await channel.send(f"{after.mention}, {choice(Config.LEAVE_PHRASES)}")
                         await channel.send(f"{after.mention}, {resp}")
 
-                    logging.info(f"{after.display_name} was punished for {cur_act.name}")
+                    self.LOGGER.debug(f"{after.display_name} was punished for {cur_act.name}")
 
         except Exception as ex:
-            logging.error(ex)
+            self.LOGGER.error(ex)
 
     # Отлавливает ошибки команд
     async def on_command_error(self, context: Context, exception: errors.CommandError) -> None:
         if isinstance(exception, errors.CommandNotFound):
+            self.LOGGER.warning(
+                f"Unknown command used by {context.author}: {context.message.content}"
+            )
             await context.channel.send(
                 f"{context.author.mention}, такой команды не существует..."
             )
+        else:
+            self.LOGGER.error(f"Unhandled command error: {exception}")
 
     # ДРУГИЕ ФУНКЦИИ
 
-    @staticmethod
-    def get_local_top_resp(ctx: Context, users_top: dict[int, int]) -> tuple[str, str]:
+    def get_local_top_resp(self, ctx: Context, users_top: dict[int, int]) -> tuple[str, str]:
         if len(users_top.keys()) < Config.MAX_USERS_IN_TOP:
             title: str = f"Топ писюнов сервера:"
         else:
@@ -293,7 +298,8 @@ class DickTator(commands.Bot):
                 user_size: int = users_top.get(user_id)
                 top += f"\n{i + 1}. **{user_name} — {user_size} см**"
 
-            except Exception:
+            except Exception as ex:
+                self.LOGGER.error(ex)
                 continue
 
         return title, top
@@ -318,7 +324,7 @@ class DickTator(commands.Bot):
                 top += f"\n{i + 1}. **{user_name} — {user_size} см**"
 
             except Exception as ex:
-                logging.error(ex)
+                self.LOGGER.error(ex)
 
         return title, top
 
@@ -336,7 +342,8 @@ class DickTator(commands.Bot):
             else:
                 return f"{mention}, ты занимаешь {place_in_top} место в топе сервера"
 
-        except Exception:
+        except Exception as ex:
+            self.LOGGER.error(ex)
             return "Что-то пошло не так..."
 
     # Возвращает топ сервера
@@ -349,7 +356,7 @@ class DickTator(commands.Bot):
 
     def get_sliced_local_top(self, members: Sequence[Member]) -> dict[int, int]:
         local_top = self.get_local_top(members)
-        return self.USERS.slice_dict(local_top, Config.MAX_USERS_IN_TOP)
+        return slice_dict(local_top, Config.MAX_USERS_IN_TOP)
 
 
 async def main() -> None:
@@ -361,7 +368,7 @@ if __name__ == "__main__":
         asyncio.run(main())
 
     except KeyboardInterrupt:
-        logging.info("Bot disabled...")
+        Logger().debug("Bot disabled...")
 
     except Exception as exc:
-        logging.error(exc)
+        Logger().error(exc)

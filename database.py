@@ -1,8 +1,8 @@
 import asyncio
+from utils import *
 from config import *
-from config import Config
+from logger import Logger
 from random import randint
-from datetime import datetime
 from mysql.connector import connect
 
 
@@ -14,6 +14,7 @@ class DataBase:
         self.USER: str = user
         self.PASSWORD: str = password
         self.DATABASE: str = database
+        self.LOGGER = Logger()
 
         try:
             self.conn = connect(
@@ -24,10 +25,10 @@ class DataBase:
             )
             self.conn.autocommit = True
             self.cursor = self.conn.cursor()
-            logging.info("Successfully connected to database")
+            self.LOGGER.success(f"Successfully connected to {Config.DATABASE} database")
 
         except Exception as ex:
-            logging.error(ex)
+            self.LOGGER.error(f"Error connecting to the {Config.DATABASE}: {ex}")
 
         finally:
 
@@ -44,7 +45,7 @@ class DataBase:
         while True:
             try:
                 if not self.conn:
-                    logging.info("Trying to reconnect")
+                    self.LOGGER.debug("Attempting to reconnect to the database...")
 
                     self.conn = connect(
                         host=self.HOST,
@@ -54,11 +55,11 @@ class DataBase:
                     )
                     self.conn.autocommit = True
                     self.cursor = self.conn.cursor()
-                    
-                    logging.info("Successfully reconnected to database")
+
+                    self.LOGGER.success("Successfully reconnected to database")
 
             except Exception as ex:
-                logging.error(ex)
+                self.LOGGER.error(f"Reconnection failed: {ex}")
 
             finally:
                 await asyncio.sleep(Config.RECONNECT_DELAY)
@@ -105,7 +106,7 @@ class Table(DataBase):
         self.cursor.execute(query, (cond_value,))
 
 
-class Users(Table):
+class UsersTable(Table):
     def __init__(
             self, host: str, user: str, password: str, database: str, reconnect: bool = True
     ) -> None:
@@ -116,10 +117,10 @@ class Users(Table):
         try:
             query: str = f"INSERT INTO {self.TABLE} VALUES (%s, 0, 1)"
             self.cursor.execute(query, (user_id,))
-            logging.info("User added")
+            self.LOGGER.success(f"User {user_id} added successfully")
 
         except Exception as ex:
-            logging.error(ex)
+            self.LOGGER.error(f"Error adding user {user_id}: {ex}")
 
     # Проверяет наличие юзера в таблице
     def is_user_exist(self, user_id: int) -> bool | None:
@@ -129,7 +130,7 @@ class Users(Table):
             return bool(self.cursor.fetchone()[0])
 
         except Exception as ex:
-            logging.error(ex)
+            self.LOGGER.error(ex)
 
     # Добавляет юзера, если его нет в таблице
     def add_user_if_not_exist(self, user_id: int) -> None:
@@ -138,7 +139,7 @@ class Users(Table):
                 self.add_user(user_id)
 
         except Exception as ex:
-            logging.error(ex)
+            self.LOGGER.error(ex)
 
     # ФУНКЦИИ ДЛЯ !dick
 
@@ -229,7 +230,7 @@ class Users(Table):
     # Возвращает обрезанный топ
     def get_sliced_global_top(self) -> dict[int, int]:
         top = self.get_global_top()
-        return self.slice_dict(top, Config.MAX_USERS_IN_TOP)
+        return slice_dict(top, Config.MAX_USERS_IN_TOP)
 
     # Возвращает позицию юзера в общем топе
     @staticmethod
@@ -242,13 +243,13 @@ class Users(Table):
         try:
             while True:
                 # Оставшееся время до добавления попыток
-                time_delta: float = self.get_time_delta(Config.ATTEMPTS_ADD_HOUR)
+                time_delta: float = get_time_delta(Config.ATTEMPTS_ADD_HOUR)
                 await asyncio.sleep(time_delta)  # Ждёт назначенное время
                 self.add_attempts()
-                logging.info("Attempts added")
+                self.LOGGER.debug("Attempts added")
 
         except Exception as ex:
-            logging.error(ex)
+            self.LOGGER.error(ex)
 
     def add_attempts(self):
         users: list[tuple[int, int]] = self.get_values("id, attempts")
@@ -256,25 +257,6 @@ class Users(Table):
         for user_id, attempts in users:
             query: str = f"UPDATE {self.TABLE} SET attempts = %s WHERE id = %s"
             self.cursor.execute(query, (attempts + Config.ATTEMPTS_AMOUNT, user_id))
-
-    # Возвращает кол-во секунд до времени добавления попыток
-    @staticmethod
-    def get_time_delta(hour: int) -> float:
-        cur_time: datetime = datetime.today().astimezone(Config.TIMEZONE)
-        next_time: datetime = cur_time.replace(
-            day=cur_time.day,
-            hour=hour,
-            minute=0,
-            second=0,
-            microsecond=0,
-            tzinfo=Config.TIMEZONE
-        )
-
-        if cur_time > next_time:
-            next_time += timedelta(days=1)
-
-        delta_time: float = (next_time - cur_time).total_seconds()
-        return delta_time
 
     # Возвращает текст ответа на изменение размера писюна
     @staticmethod
@@ -286,15 +268,9 @@ class Users(Table):
         else:
             return f"твой писюн не изменился"
 
-    # Обрезает словарь
-    @staticmethod
-    def slice_dict(full_dict: dict, gap: int) -> dict:
-        items = full_dict.items()
-        return dict(list(items)[:gap])
-
 
 def main():
-    Users(
+    UsersTable(
         Config.HOST,
         Config.USER,
         Config.PASSWORD,
