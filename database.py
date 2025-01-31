@@ -198,7 +198,7 @@ class UsersTable(Table):
     # Возвращает текст с размером писюна
     def get_dick_size_resp(self, user_id: int) -> str:
         size: int = self.get_dick_size(user_id)
-        return f"Сейчас твой писюн размером {size} см"
+        return f"Сейчас твой писюн имеет размер {size} см"
 
     # ДРУГИЕ ФУНКЦИИ
 
