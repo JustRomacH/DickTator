@@ -14,11 +14,16 @@ class DataBase:
         self.USER: str = user
         self.PASSWORD: str = password
         self.DATABASE: str = database
-        self.conn = None
-        self.cursor = None
 
         try:
-            self.connect_to_db()
+            self.conn = connect(
+                host=self.HOST,
+                user=self.USER,
+                password=self.PASSWORD,
+                database=self.DATABASE
+            )
+            self.conn.autocommit = True
+            self.cursor = self.conn.cursor()
             logging.info("Successfully connected to database")
 
         except Exception as ex:
@@ -34,24 +39,22 @@ class DataBase:
             else:
                 asyncio.create_task(self.reconnect_on_error())
 
-    # Подключение к базе данных
-    def connect_to_db(self):
-        self.conn = connect(
-            host=self.HOST,
-            user=self.USER,
-            password=self.PASSWORD,
-            database=self.DATABASE
-        )
-        self.conn.autocommit = True
-        self.cursor = self.conn.cursor()
-
     # Проверяет подключение и пытается переподключиться
     async def reconnect_on_error(self) -> None:
         while True:
             try:
                 if not self.conn:
                     logging.info("Trying to reconnect")
-                    self.connect_to_db()
+
+                    self.conn = connect(
+                        host=self.HOST,
+                        user=self.USER,
+                        password=self.PASSWORD,
+                        database=self.DATABASE
+                    )
+                    self.conn.autocommit = True
+                    self.cursor = self.conn.cursor()
+                    
                     logging.info("Successfully reconnected to database")
 
             except Exception as ex:
@@ -119,7 +122,7 @@ class Users(Table):
             logging.error(ex)
 
     # Проверяет наличие юзера в таблице
-    def is_user_exist(self, user_id: int) -> bool:
+    def is_user_exist(self, user_id: int) -> bool | None:
         try:
             query: str = f"SELECT EXISTS(SELECT 1 FROM {self.TABLE} WHERE id=%s)"
             self.cursor.execute(query, (user_id,))
