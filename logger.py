@@ -12,7 +12,8 @@ class Logger:
         self.FILE = open(
             file=LoggerConfig.FILENAME,
             mode=LoggerConfig.FILEMODE,
-            encoding="utf-8"
+            encoding="utf-8",
+            errors="ignore",
         )
         self.OS = platform.system()
 
@@ -21,24 +22,26 @@ class Logger:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    @staticmethod
-    def get_caller() -> str:
-        caller_frame = inspect.stack()[2]
+    def get_caller(self):
+        try:
+            caller_frame = inspect.stack()[2]
+            caller_function = caller_frame.function
+            caller_class = None
+            f_locals = caller_frame.frame.f_locals
 
-        caller_function = caller_frame.function
-        caller_class = None
-        f_locals = caller_frame.frame.f_locals
+            if 'self' in f_locals:
+                caller_class = f_locals['self'].__class__.__name__
+            elif 'cls' in f_locals:
+                caller_class = f_locals['cls'].__name__
 
-        # Проверяем, был ли вызов из класса
-        if 'self' in f_locals:
-            caller_class = f_locals['self'].__class__.__name__
-        elif 'cls' in f_locals:
-            caller_class = f_locals['cls'].__name__
+            if caller_class:
+                return f"{caller_class}.{caller_function}"
+            else:
+                return caller_function
 
-        if caller_class:
-            return f"{caller_class}.{caller_function}"
-        else:
-            return caller_function
+        except Exception as ex:
+            self.error(ex)
+            return None
 
     def output(self, log, color) -> None:
         if self.OS == "Windows":
