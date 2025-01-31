@@ -17,7 +17,7 @@ class Logger:
         self.OS = platform.system()
 
     def __new__(cls):
-        if cls._instance is None:
+        if not cls._instance:
             cls._instance = super().__new__(cls)
         return cls._instance
 
