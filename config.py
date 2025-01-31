@@ -1,4 +1,5 @@
 from os import getenv
+from pathlib import Path
 from dotenv import load_dotenv
 from dataclasses import dataclass
 from utils import get_words_right_form
@@ -60,4 +61,5 @@ class Config:
 @dataclass
 class LoggerConfig:
     FILENAME: str = "dicktator.log"
+    FILEPATH: str = Path(__file__).resolve().parent / FILENAME
     FILEMODE: str = "a"
