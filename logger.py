@@ -1,4 +1,5 @@
 import inspect
+import platform
 from utils import *
 from config import *
 from termcolor import cprint
@@ -13,6 +14,7 @@ class Logger:
             mode=LoggerConfig.FILEMODE,
             encoding="utf-8"
         )
+        self.OS = platform.system()
 
     def __new__(cls):
         if cls._instance is None:
@@ -38,30 +40,31 @@ class Logger:
         else:
             return caller_function
 
+    def output(self, log, color) -> None:
+        if self.OS == "Windows":
+            cprint(log, color)
+        self.FILE.write(log + "\n")
+
     def debug(self, message) -> None:
         time: str = get_current_time_formatted()
         caller: str = self.get_caller()
         log: str = f"[~] [{time}] {caller} >>> {message}"
-        cprint(log, "grey")
-        self.FILE.write(log + "\n")
+        self.output(log, "grey")
 
     def success(self, message) -> None:
         time: str = get_current_time_formatted()
         caller: str = self.get_caller()
         log: str = f"[+] [{time}] {caller} >>> {message}"
-        cprint(log, "green")
-        self.FILE.write(log + "\n")
+        self.output(log, "green")
 
     def warning(self, message) -> None:
         time: str = get_current_time_formatted()
         caller: str = self.get_caller()
         log: str = f"[!] [{time}] {caller} >>> {message}"
-        cprint(log, "yellow")
-        self.FILE.write(log + "\n")
+        self.output(log, "yellow")
 
     def error(self, message) -> None:
         time: str = get_current_time_formatted()
         caller: str = self.get_caller()
         log: str = f"[-] [{time}] {caller} >>> {message}"
-        cprint(log, "red")
-        self.FILE.write(log + "\n")
+        self.output(log, "red")
