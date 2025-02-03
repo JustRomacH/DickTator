@@ -16,8 +16,6 @@ class DataBase:
         self.LOGGER: Logger = Logger()
         self.pool: Optional[aiomysql.Pool] = None
 
-        asyncio.create_task(self.connect())
-
     async def connect(self) -> None:
         try:
             self.pool = await aiomysql.create_pool(
@@ -134,7 +132,7 @@ class UsersTable(Table):
         attempts = await self.get_attempts(user_id)
         if attempts > 0:
             await self.update_value("attempts", attempts - 1, "id", user_id)
-            delta = randint(Config.MIN_DICK_DELTA, Config.MAX_DICK_DELTA)
+            delta = randint(BotConfig.MIN_DICK_DELTA, BotConfig.MAX_DICK_DELTA)
             return await self.change_dick_size(user_id, delta)
         return await self.get_dick_resp(user_id, is_atts_were=False)
 
@@ -203,7 +201,7 @@ class UsersTable(Table):
     # Возвращает обрезанный топ
     async def get_sliced_global_top(self) -> dict[int, int]:
         top = await self.get_global_top()
-        return slice_dict(top, Config.MAX_USERS_IN_TOP)
+        return slice_dict(top, BotConfig.MAX_USERS_IN_TOP)
 
     # Возвращает позицию юзера в общем топе
     @staticmethod
@@ -213,13 +211,13 @@ class UsersTable(Table):
     # Добавляет 1 попытку всем юзерам каждый день
     async def add_attempts_coroutine(self) -> None:
         while True:
-            time_delta = get_time_delta(Config.ATTEMPTS_ADD_HOUR)
+            time_delta = get_time_delta(BotConfig.ATTEMPTS_ADD_HOUR)
             await asyncio.sleep(time_delta)
             await self.add_attempts()
             self.LOGGER.debug("Attempts added")
 
     async def add_attempts(self) -> None:
-        query = f"UPDATE {self.TABLE} SET attempts = attempts + {Config.ATTEMPTS_AMOUNT}"
+        query = f"UPDATE {self.TABLE} SET attempts = attempts + {BotConfig.ATTEMPTS_AMOUNT}"
         await self.execute(query)
 
     # Возвращает текст ответа на изменение размера писюна
@@ -235,11 +233,12 @@ class UsersTable(Table):
 
 async def main():
     users = UsersTable(
-        Config.HOST,
-        Config.USER,
-        Config.PASSWORD,
-        Config.DATABASE
+        DBConfig.HOST,
+        DBConfig.USER,
+        DBConfig.PASSWORD,
+        DBConfig.DATABASE
     )
+    await users.add_attempts()
 
 
 if __name__ == "__main__":
