@@ -14,6 +14,8 @@ from discord import Intents, Member, User, Message, TextChannel, Embed
 
 class DickTator(commands.Bot):
     def __init__(self):
+        self.LOGGER = Logger(output=False)
+        self.LOGGER.debug("Bot is starting...")
         super().__init__(
             help_command=None,
             intents=Intents.all(),
@@ -22,17 +24,16 @@ class DickTator(commands.Bot):
         self.commands_list: list = list()
         self.aliases_list: list = list()
         self.processed_activities: {int: set} = dict()
-        self.LOGGER = Logger()
         self.USERS = UsersTable(
             Config.HOST,
             Config.USER,
             Config.PASSWORD,
-            Config.DATABASE
+            Config.DATABASE,
         )
 
     # Срабатывает при запуске бота
     async def on_ready(self):
-        self.LOGGER.debug("Bot is starting...")
+        await self.USERS.connect()
         await self.add_commands()
         self.add_funcs_info()
         self.LOGGER.success("Bot started")
@@ -96,7 +97,7 @@ class DickTator(commands.Bot):
         async def dick(ctx: commands.Context) -> None:
             user_id: int = ctx.author.id
             mention: str = ctx.author.mention
-            resp: str = self.USERS.dick_random(user_id)
+            resp: str = await self.USERS.dick_random(user_id)
             await ctx.channel.send(f"{mention}, {resp}")
 
         # Выводит топ писюнов сервера
@@ -106,7 +107,7 @@ class DickTator(commands.Bot):
         )
         async def top(ctx: commands.Context) -> None:
             members: Sequence[Member] = ctx.guild.members
-            local_top = self.get_sliced_local_top(members)
+            local_top = await self.get_sliced_local_top(members)
 
             if not local_top:
                 await ctx.channel.send("Похоже топ пустой...")
@@ -125,7 +126,7 @@ class DickTator(commands.Bot):
             help="Выводит глобальный топ писюнов"
         )
         async def gtop(ctx: commands.Context) -> None:
-            global_top: dict[int, int] = self.USERS.get_sliced_global_top()
+            global_top: dict[int, int] = await self.USERS.get_sliced_global_top()
 
             if not global_top:
                 await ctx.channel.send("Похоже топ пустой...")
@@ -145,7 +146,7 @@ class DickTator(commands.Bot):
         )
         async def place(ctx: commands.Context) -> None:
             members: Sequence[Member] = ctx.guild.members
-            local_top = self.get_local_top(members)
+            local_top = await self.get_local_top(members)
             resp = self.get_place_resp(ctx, local_top)
             await ctx.channel.send(resp)
 
@@ -155,7 +156,7 @@ class DickTator(commands.Bot):
             help="Выводит место в глобальном топе"
         )
         async def gplace(ctx: commands.Context) -> None:
-            global_top = self.USERS.get_global_top()
+            global_top = await self.USERS.get_global_top()
             resp = self.get_place_resp(ctx, global_top, True)
             await ctx.channel.send(resp)
 
@@ -168,10 +169,11 @@ class DickTator(commands.Bot):
             try:
                 user_id: int = ctx.author.id
                 mention: str = ctx.author.mention
-                attempts_resp: str = self.USERS.get_attempts_resp(user_id)
+                attempts_resp: str = await self.USERS.get_attempts_resp(user_id)
                 await ctx.channel.send(f"{mention}, {attempts_resp.lower()}")
 
-            except Exception:
+            except Exception as ex:
+                self.LOGGER.error(ex)
                 await ctx.channel.send("Что-то пошло не так...")
 
         # Выводит размер писюна
@@ -183,11 +185,12 @@ class DickTator(commands.Bot):
             try:
                 user_id: int = ctx.author.id
                 mention: str = ctx.author.mention
-                dick_size_resp: str = self.USERS.get_dick_size_resp(user_id)
+                dick_size_resp: str = await self.USERS.get_dick_size_resp(user_id)
                 await ctx.channel.send(f"{mention}, {dick_size_resp.lower()}")
 
-            except Exception:
+            except Exception as ex:
                 await ctx.channel.send("Что-то пошло не так...")
+                self.LOGGER.error(ex)
 
         # Выводит госдолг США
         @self.command(
@@ -253,8 +256,8 @@ class DickTator(commands.Bot):
                     # Добавляем активность в список обработанных
                     self.processed_activities[after.id].add(activity_key)
 
-                    self.USERS.add_user_if_not_exist(after.id)
-                    resp: str = self.USERS.change_dick_size(after.id, Config.FINE)
+                    await self.USERS.add_user_if_not_exist(after.id)
+                    resp: str = await self.USERS.change_dick_size(after.id, Config.FINE)
 
                     # Рассылаем сообщения по всем серверам
                     for guild in self.guilds:
@@ -279,7 +282,7 @@ class DickTator(commands.Bot):
                 f"{context.author.mention}, такой команды не существует..."
             )
         else:
-            self.LOGGER.error(f"Unhandled command error: {exception}")
+            self.LOGGER.error(exception)
 
     # ДРУГИЕ ФУНКЦИИ
 
@@ -347,15 +350,15 @@ class DickTator(commands.Bot):
             return "Что-то пошло не так..."
 
     # Возвращает топ сервера
-    def get_local_top(self, members: Sequence[Member]) -> dict[int, int]:
-        global_top: dict[int, int] = self.USERS.get_global_top()
+    async def get_local_top(self, members: Sequence[Member]) -> dict[int, int]:
+        global_top: dict[int, int] = await self.USERS.get_global_top()
         top_ids = global_top.keys()
         members_ids: list[int] = [member.id for member in members]
         common_ids: list[int] = list(filter(lambda x: x in members_ids, top_ids))
         return {user_id: global_top.get(user_id) for user_id in common_ids}
 
-    def get_sliced_local_top(self, members: Sequence[Member]) -> dict[int, int]:
-        local_top = self.get_local_top(members)
+    async def get_sliced_local_top(self, members: Sequence[Member]) -> dict[int, int]:
+        local_top = await self.get_local_top(members)
         return slice_dict(local_top, Config.MAX_USERS_IN_TOP)
 
 
