@@ -19,16 +19,16 @@ class DickTator(commands.Bot):
         super().__init__(
             help_command=None,
             intents=Intents.all(),
-            command_prefix=Config.PREFIX,
+            command_prefix=BotConfig.PREFIX,
         )
         self.commands_list: list = list()
         self.aliases_list: list = list()
         self.processed_activities: {int: set} = dict()
         self.USERS = UsersTable(
-            Config.HOST,
-            Config.USER,
-            Config.PASSWORD,
-            Config.DATABASE,
+            DBConfig.HOST,
+            DBConfig.USER,
+            DBConfig.PASSWORD,
+            DBConfig.DATABASE,
         )
 
     # Срабатывает при запуске бота
@@ -65,8 +65,8 @@ class DickTator(commands.Bot):
         async def help(ctx: commands.Context):
             embed = Embed(
                 title="Общая информация:",
-                description=Config.HELP_RESPONSE,
-                color=Config.EMBED_COLOR
+                description=BotConfig.HELP_RESPONSE,
+                color=BotConfig.EMBED_COLOR
             )
             embed.add_field(
                 name="Команды:",
@@ -87,7 +87,7 @@ class DickTator(commands.Bot):
         )
         async def stalcraft(ctx: commands.Context) -> None:
             await ctx.message.delete()
-            await ctx.channel.send(Config.STALCRAFT_FACE)
+            await ctx.channel.send(BotConfig.STALCRAFT_FACE)
 
         # Изменяет размер писюна на рандомное значение
         @self.command(
@@ -116,7 +116,7 @@ class DickTator(commands.Bot):
             embed = Embed(
                 title=title,
                 description=users_top,
-                color=Config.EMBED_COLOR
+                color=BotConfig.EMBED_COLOR
             )
             await ctx.channel.send(embed=embed)
 
@@ -135,7 +135,7 @@ class DickTator(commands.Bot):
             embed = Embed(
                 title=title,
                 description=users_top,
-                color=Config.EMBED_COLOR
+                color=BotConfig.EMBED_COLOR
             )
             await ctx.channel.send(embed=embed)
 
@@ -199,7 +199,7 @@ class DickTator(commands.Bot):
         )
         async def gosdolg(ctx: commands.Context) -> None:
             try:
-                req: bytes = requests.get(Config.US_DEBT_URL).content
+                req: bytes = requests.get(BotConfig.US_DEBT_URL).content
                 html: BS = BS(req, "html.parser")
                 el: Tag = html.find("span", {"class": "debt-number"})
                 debt: str = el.text
@@ -207,7 +207,7 @@ class DickTator(commands.Bot):
                     f"Госдолг США составляет ${debt}"
                 )
                 self.LOGGER.debug("Got US Government Debt")
-                await ctx.channel.send(Config.US_DEBT_GIF)
+                await ctx.channel.send(BotConfig.US_DEBT_GIF)
 
             except AttributeError as ex:
                 self.LOGGER.warning(ex)
@@ -225,8 +225,8 @@ class DickTator(commands.Bot):
             return
 
         # Отвечает лицом на лицо
-        if Config.STALCRAFT_FACE in message.content:
-            await message.channel.send(Config.STALCRAFT_FACE)
+        if BotConfig.STALCRAFT_FACE in message.content:
+            await message.channel.send(BotConfig.STALCRAFT_FACE)
             return
 
         await self.process_commands(message)
@@ -237,7 +237,7 @@ class DickTator(commands.Bot):
             if after.id not in self.processed_activities:
                 self.processed_activities[after.id] = set()
 
-            for ban_act in Config.BANNED_ACTIVITIES:
+            for ban_act in BotConfig.BANNED_ACTIVITIES:
                 # Если до этого была запрещённая активность
                 if any(ban_act in prev_act.name.lower() for prev_act in before.activities):
                     continue
@@ -257,14 +257,14 @@ class DickTator(commands.Bot):
                     self.processed_activities[after.id].add(activity_key)
 
                     await self.USERS.add_user_if_not_exist(after.id)
-                    resp: str = await self.USERS.change_dick_size(after.id, Config.FINE)
+                    resp: str = await self.USERS.change_dick_size(after.id, BotConfig.FINE)
 
                     # Рассылаем сообщения по всем серверам
                     for guild in self.guilds:
                         if not after in guild.members:
                             continue
                         channel: TextChannel = guild.system_channel or guild.text_channels[0]
-                        await channel.send(f"{after.mention}, {choice(Config.LEAVE_PHRASES)}")
+                        await channel.send(f"{after.mention}, {choice(BotConfig.LEAVE_PHRASES)}")
                         await channel.send(f"{after.mention}, {resp}")
 
                     self.LOGGER.debug(f"{after.display_name} was punished for {cur_act.name}")
@@ -287,10 +287,10 @@ class DickTator(commands.Bot):
     # ДРУГИЕ ФУНКЦИИ
 
     def get_local_top_resp(self, ctx: Context, users_top: dict[int, int]) -> tuple[str, str]:
-        if len(users_top.keys()) < Config.MAX_USERS_IN_TOP:
+        if len(users_top.keys()) < BotConfig.MAX_USERS_IN_TOP:
             title: str = f"Топ писюнов сервера:"
         else:
-            title: str = f"Топ {Config.MAX_USERS_IN_TOP} писюнов сервера:"
+            title: str = f"Топ {BotConfig.MAX_USERS_IN_TOP} писюнов сервера:"
 
         top: str = str()
 
@@ -308,10 +308,10 @@ class DickTator(commands.Bot):
         return title, top
 
     def get_global_top_resp(self, users_top: dict[int, int]) -> tuple[str, str]:
-        if len(users_top.keys()) < Config.MAX_USERS_IN_TOP:
+        if len(users_top.keys()) < BotConfig.MAX_USERS_IN_TOP:
             title: str = f"Топ писюнов:"
         else:
-            title: str = f"Топ {Config.MAX_USERS_IN_TOP} писюнов:"
+            title: str = f"Топ {BotConfig.MAX_USERS_IN_TOP} писюнов:"
 
         top: str = str()
 
@@ -359,11 +359,11 @@ class DickTator(commands.Bot):
 
     async def get_sliced_local_top(self, members: Sequence[Member]) -> dict[int, int]:
         local_top = await self.get_local_top(members)
-        return slice_dict(local_top, Config.MAX_USERS_IN_TOP)
+        return slice_dict(local_top, BotConfig.MAX_USERS_IN_TOP)
 
 
 async def main() -> None:
-    await DickTator().start(Config.TOKEN)
+    await DickTator().start(BotConfig.TOKEN)
 
 
 if __name__ == "__main__":
