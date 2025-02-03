@@ -3,12 +3,24 @@ import platform
 from utils import *
 from config import *
 from termcolor import cprint
+from functools import lru_cache
 
 
 class Logger:
     _instance = None
 
-    def __init__(self):
+    def __new__(cls, output: bool = True):
+        if not cls._instance:
+            cls._instance = super().__new__(cls)
+            cls._instance._initialized = False
+        return cls._instance
+
+    def __init__(self, output: bool = True):
+        if self._initialized:
+            return
+        self._initialized = True
+
+        self.terminal_out = output
         self.FILE = open(
             file=LoggerConfig.FILENAME,
             mode=LoggerConfig.FILEMODE,
@@ -17,11 +29,11 @@ class Logger:
         )
         self.OS = platform.system()
 
-    def __new__(cls):
-        if not cls._instance:
-            cls._instance = super().__new__(cls)
-        return cls._instance
+    def __del__(self):
+        if hasattr(self, "FILE") and not self.FILE.closed:
+            self.FILE.close()
 
+    @lru_cache(maxsize=128)
     def get_caller(self):
         try:
             caller_frame = inspect.stack()[2]
@@ -34,47 +46,38 @@ class Logger:
             elif 'cls' in f_locals:
                 caller_class = f_locals['cls'].__name__
 
-            if caller_class:
-                return f"{caller_class}.{caller_function}"
-            else:
-                return caller_function
+            return f"{caller_class}.{caller_function}" if caller_class else caller_function
 
         except Exception as ex:
             self.error(ex)
-            return None
+            return "Unknown"
 
-    def output(self, log, color) -> None:
+    def output(self, log, color: str = "grey") -> None:
         if self.OS == "Windows":
             cprint(log, color)
         self.FILE.write(log + "\n")
 
+    def log_message(self, level, color, message):
+        time = get_current_time_formatted()
+        caller = self.get_caller()
+        log = f"[{level}] [{time}] {caller} >>> {message}"
+        self.output(log, color)
+
     def debug(self, message) -> None:
-        time: str = get_current_time_formatted()
-        caller: str = self.get_caller()
-        log: str = f"[~] [{time}] {caller} >>> {message}"
-        self.output(log, "grey")
+        self.log_message("~", "grey", message)
 
     def success(self, message) -> None:
-        time: str = get_current_time_formatted()
-        caller: str = self.get_caller()
-        log: str = f"[+] [{time}] {caller} >>> {message}"
-        self.output(log, "green")
+        self.log_message("+", "green", message)
 
     def warning(self, message) -> None:
-        time: str = get_current_time_formatted()
-        caller: str = self.get_caller()
-        log: str = f"[!] [{time}] {caller} >>> {message}"
-        self.output(log, "yellow")
+        self.log_message("!", "yellow", message)
 
     def error(self, message) -> None:
-        time: str = get_current_time_formatted()
-        caller: str = self.get_caller()
-        log: str = f"[-] [{time}] {caller} >>> {message}"
-        self.output(log, "red")
+        self.log_message("-", "red", message)
 
 
 def main():
-    logger = Logger()
+    logger = Logger(output=True)
 
 
 if __name__ == "__main__":
