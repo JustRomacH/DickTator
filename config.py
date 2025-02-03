@@ -9,15 +9,10 @@ load_dotenv()
 
 # Основные переменные бота
 @dataclass
-class Config:
+class BotConfig:
     PREFIX: str = "!"
     TOKEN: str = getenv("TOKEN")
-    HOST: str = getenv("HOST")
-    USER: str = getenv("USER")
-    PASSWORD: str = getenv("PASSWORD")
-    DATABASE: str = getenv("DATABASE")
     EMBED_COLOR: hex = 0xffb347
-    RECONNECT_DELAY: int = 30
     FINE: int = -10
     ATTEMPTS_ADD_HOUR: int = 17
     ATTEMPTS_AMOUNT: int = 1
@@ -56,6 +51,14 @@ class Config:
                           f"\nРандом выдаёт числа от {MIN_DICK_DELTA} до {MAX_DICK_DELTA} см."
                           f"\nЗапуск Доты, Unturned, Геншина и т.п. запрещён."
                           f"\nЗа нарушение твой писюн уменьшается на {abs(FINE)} см.")
+
+
+@dataclass
+class DBConfig:
+    HOST: str = getenv("HOST")
+    USER: str = getenv("USER")
+    PASSWORD: str = getenv("PASSWORD")
+    DATABASE: str = getenv("DATABASE")
 
 
 @dataclass
