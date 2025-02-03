@@ -214,11 +214,11 @@ class UsersTable(Table):
             time_delta = get_time_delta(BotConfig.ATTEMPTS_ADD_HOUR)
             await asyncio.sleep(time_delta)
             await self.add_attempts()
-            await self.LOGGER.debug("Attempts added")
 
     async def add_attempts(self) -> None:
         query = f"UPDATE {self.TABLE} SET attempts = attempts + {BotConfig.ATTEMPTS_AMOUNT}"
         await self.execute(query)
+        await self.LOGGER.debug("Attempts added")
 
     # Возвращает текст ответа на изменение размера писюна
     @staticmethod
@@ -238,6 +238,7 @@ async def main():
         DBConfig.PASSWORD,
         DBConfig.DATABASE
     )
+    await users.connect()
     await users.add_attempts()
 
 
