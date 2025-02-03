@@ -27,22 +27,24 @@ class Logger:
         self.lock = asyncio.Lock()
 
     @lru_cache(maxsize=128)
-    def get_caller(self):
+    async def get_caller(self):
         try:
-            caller_frame = inspect.stack()[2]
-            caller_function = caller_frame.function
+            frame = inspect.currentframe()
+            frame = frame.f_back.f_back.f_back
+
+            function_name = frame.f_code.co_name
+            caller_locals = frame.f_locals
+
             caller_class = None
-            f_locals = caller_frame.frame.f_locals
+            if "self" in caller_locals:
+                caller_class = caller_locals["self"].__class__.__name__
+            elif "cls" in caller_locals:
+                caller_class = caller_locals["cls"].__name__
 
-            if 'self' in f_locals:
-                caller_class = f_locals['self'].__class__.__name__
-            elif 'cls' in f_locals:
-                caller_class = f_locals['cls'].__name__
-
-            return f"{caller_class}.{caller_function}" if caller_class else caller_function
+            return f"{caller_class}.{function_name}" if caller_class else function_name
 
         except Exception as ex:
-            asyncio.create_task(self.error(ex))
+            await self.error(ex)
             return "Unknown"
 
     async def output(self, log, color: str = "grey") -> None:
@@ -54,7 +56,7 @@ class Logger:
 
     async def log_message(self, level, color, message):
         time = get_current_time_formatted()
-        caller = self.get_caller()
+        caller = await self.get_caller()
         log = f"[{level}] [{time}] {caller} >>> {message}"
         await self.output(log, color)
 
