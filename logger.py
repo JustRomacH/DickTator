@@ -4,7 +4,6 @@ import aiofiles
 from utils import *
 from config import *
 from termcolor import cprint
-from functools import lru_cache
 
 
 class Logger:
@@ -26,8 +25,7 @@ class Logger:
         self.filemode = LoggerConfig.FILEMODE
         self.lock = asyncio.Lock()
 
-    @lru_cache(maxsize=128)
-    async def get_caller(self):
+    def get_caller(self):
         try:
             frame = inspect.currentframe()
             frame = frame.f_back.f_back.f_back
@@ -44,7 +42,7 @@ class Logger:
             return f"{caller_class}.{function_name}" if caller_class else function_name
 
         except Exception as ex:
-            await self.error(ex)
+            asyncio.run(self.error(ex))
             return "Unknown"
 
     async def output(self, log, color: str = "grey") -> None:
@@ -56,7 +54,7 @@ class Logger:
 
     async def log_message(self, level, color, message):
         time = get_current_time_formatted()
-        caller = await self.get_caller()
+        caller = self.get_caller()
         log = f"[{level}] [{time}] {caller} >>> {message}"
         await self.output(log, color)
 
