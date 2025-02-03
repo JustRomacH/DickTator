@@ -14,8 +14,7 @@ from discord import Intents, Member, User, Message, TextChannel, Embed
 
 class DickTator(commands.Bot):
     def __init__(self):
-        self.LOGGER = Logger(output=False)
-        self.LOGGER.debug("Bot is starting...")
+        self.LOGGER = Logger()
         super().__init__(
             help_command=None,
             intents=Intents.all(),
@@ -35,13 +34,13 @@ class DickTator(commands.Bot):
     async def on_ready(self):
         await self.USERS.connect()
         await self.add_commands()
-        self.add_funcs_info()
-        self.LOGGER.success("Bot started")
+        await self.add_funcs_info()
+        await self.LOGGER.success("Bot started")
         await self.USERS.add_attempts_coroutine()
 
     # Добавляет информацию о функциях в HELP_RESPONSE в config
-    def add_funcs_info(self) -> None:
-        self.LOGGER.debug("Adding functions info...")
+    async def add_funcs_info(self) -> None:
+        await self.LOGGER.debug("Adding functions info...")
         bot_commands = sorted(self.commands, key=lambda f: len(f.name))
 
         for func in bot_commands:
@@ -53,13 +52,13 @@ class DickTator(commands.Bot):
                 alias_str = f"\n{self.command_prefix}{func.name} - {", ".join(aliases)}"
                 self.aliases_list.append(alias_str)
 
-        self.LOGGER.debug("Functions info added")
+        await self.LOGGER.debug("Functions info added")
 
     # КОМАНДЫ
 
     # Добавляет команды
     async def add_commands(self) -> None:
-        self.LOGGER.debug("Adding commands...")
+        await self.LOGGER.debug("Adding commands...")
 
         @self.command(aliases=["i", "h", "inf", "info", "infa"], help="Выводит это сообщение")
         async def help(ctx: commands.Context):
@@ -78,7 +77,7 @@ class DickTator(commands.Bot):
             )
             await ctx.channel.send(embed=embed)
 
-        self.LOGGER.success("Commands added")
+        await self.LOGGER.success("Commands added")
 
         # Скидывает лицо из Stalcraft
         @self.command(
@@ -173,7 +172,7 @@ class DickTator(commands.Bot):
                 await ctx.channel.send(f"{mention}, {attempts_resp.lower()}")
 
             except Exception as ex:
-                self.LOGGER.error(ex)
+                await self.LOGGER.error(ex)
                 await ctx.channel.send("Что-то пошло не так...")
 
         # Выводит размер писюна
@@ -190,7 +189,7 @@ class DickTator(commands.Bot):
 
             except Exception as ex:
                 await ctx.channel.send("Что-то пошло не так...")
-                self.LOGGER.error(ex)
+                await self.LOGGER.error(ex)
 
         # Выводит госдолг США
         @self.command(
@@ -206,15 +205,15 @@ class DickTator(commands.Bot):
                 await ctx.channel.send(
                     f"Госдолг США составляет ${debt}"
                 )
-                self.LOGGER.debug("Got US Government Debt")
+                await self.LOGGER.debug("Got US Government Debt")
                 await ctx.channel.send(BotConfig.US_DEBT_GIF)
 
             except AttributeError as ex:
-                self.LOGGER.warning(ex)
+                await self.LOGGER.warning(ex)
                 await ctx.channel.send("Произошла ошибка...")
 
             except Exception as ex:
-                self.LOGGER.error(ex)
+                await self.LOGGER.error(ex)
 
     # ИВЕНТЫ
 
@@ -267,22 +266,24 @@ class DickTator(commands.Bot):
                         await channel.send(f"{after.mention}, {choice(BotConfig.LEAVE_PHRASES)}")
                         await channel.send(f"{after.mention}, {resp}")
 
-                    self.LOGGER.debug(f"{after.display_name} was punished for {cur_act.name}")
+                    await self.LOGGER.debug(
+                        f"{after.display_name} was punished for {cur_act.name}"
+                    )
 
         except Exception as ex:
-            self.LOGGER.error(ex)
+            await self.LOGGER.error(ex)
 
     # Отлавливает ошибки команд
     async def on_command_error(self, context: Context, exception: errors.CommandError) -> None:
         if isinstance(exception, errors.CommandNotFound):
-            self.LOGGER.warning(
+            await self.LOGGER.warning(
                 f"Unknown command used by {context.author}: {context.message.content}"
             )
             await context.channel.send(
                 f"{context.author.mention}, такой команды не существует..."
             )
         else:
-            self.LOGGER.error(exception)
+            await self.LOGGER.error(exception)
 
     # ДРУГИЕ ФУНКЦИИ
 
@@ -363,15 +364,18 @@ class DickTator(commands.Bot):
 
 
 async def main() -> None:
-    await DickTator().start(BotConfig.TOKEN)
+    logger = Logger(output=False)
+
+    try:
+        await logger.debug("Bot is starting...")
+        await DickTator().start(BotConfig.TOKEN)
+
+    except KeyboardInterrupt:
+        await logger.debug("Bot disabled...")
+
+    except Exception as exc:
+        await logger.error(exc)
 
 
 if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-
-    except KeyboardInterrupt:
-        Logger().debug("Bot disabled...")
-
-    except Exception as exc:
-        Logger().error(exc)
+    asyncio.run(main())

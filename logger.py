@@ -1,5 +1,6 @@
 import inspect
-import platform
+import asyncio
+import aiofiles
 from utils import *
 from config import *
 from termcolor import cprint
@@ -21,17 +22,9 @@ class Logger:
         self._initialized = True
 
         self.terminal_out = output
-        self.FILE = open(
-            file=LoggerConfig.FILENAME,
-            mode=LoggerConfig.FILEMODE,
-            encoding="utf-8",
-            errors="ignore",
-        )
-        self.OS = platform.system()
-
-    def __del__(self):
-        if hasattr(self, "FILE") and not self.FILE.closed:
-            self.FILE.close()
+        self.filename = LoggerConfig.FILENAME
+        self.filemode = LoggerConfig.FILEMODE
+        self.lock = asyncio.Lock()
 
     @lru_cache(maxsize=128)
     def get_caller(self):
@@ -49,36 +42,39 @@ class Logger:
             return f"{caller_class}.{caller_function}" if caller_class else caller_function
 
         except Exception as ex:
-            self.error(ex)
+            asyncio.create_task(self.error(ex))
             return "Unknown"
 
-    def output(self, log, color: str = "grey") -> None:
-        if self.OS == "Windows":
+    async def output(self, log, color: str = "grey") -> None:
+        if self.terminal_out:
             cprint(log, color)
-        self.FILE.write(log + "\n")
+        async with self.lock:  # Предотвращает одновременную запись
+            async with aiofiles.open(self.filename, mode=self.filemode, encoding="utf-8", errors="ignore") as file:
+                await file.write(log + "\n")
 
-    def log_message(self, level, color, message):
+    async def log_message(self, level, color, message):
         time = get_current_time_formatted()
         caller = self.get_caller()
         log = f"[{level}] [{time}] {caller} >>> {message}"
-        self.output(log, color)
+        await self.output(log, color)
 
-    def debug(self, message) -> None:
-        self.log_message("~", "grey", message)
+    async def debug(self, message) -> None:
+        await self.log_message("~", "grey", message)
 
-    def success(self, message) -> None:
-        self.log_message("+", "green", message)
+    async def success(self, message) -> None:
+        await self.log_message("+", "green", message)
 
-    def warning(self, message) -> None:
-        self.log_message("!", "yellow", message)
+    async def warning(self, message) -> None:
+        await self.log_message("!", "yellow", message)
 
-    def error(self, message) -> None:
-        self.log_message("-", "red", message)
+    async def error(self, message) -> None:
+        await self.log_message("-", "red", message)
 
 
-def main():
+async def main():
     logger = Logger(output=True)
+    await logger.success("Logger initialized successfully")
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

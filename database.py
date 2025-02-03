@@ -27,10 +27,10 @@ class DataBase:
                 minsize=1,
                 maxsize=25
             )
-            self.LOGGER.success(f"Successfully connected to '{self.DATABASE}' database")
+            await self.LOGGER.success(f"Successfully connected to '{self.DATABASE}' database")
 
         except Exception as ex:
-            self.LOGGER.error(ex)
+            await self.LOGGER.error(ex)
 
     async def execute(self, query: str, params: Tuple[Any, ...] = ()) -> None:
         try:
@@ -39,7 +39,7 @@ class DataBase:
                     await cur.execute(query, params)
 
         except Exception as ex:
-            self.LOGGER.error(ex)
+            await self.LOGGER.error(ex)
 
     async def execute_one(self, query: str, params: Tuple[Any, ...] = ()) -> Any:
         try:
@@ -49,7 +49,7 @@ class DataBase:
                     return await cur.fetchone()
 
         except Exception as ex:
-            self.LOGGER.error(ex)
+            await self.LOGGER.error(ex)
             return None
 
     async def execute_many(
@@ -62,7 +62,7 @@ class DataBase:
                     return await cur.fetchall()
 
         except Exception as ex:
-            self.LOGGER.error(ex)
+            await self.LOGGER.error(ex)
             return list()
 
 
@@ -107,10 +107,10 @@ class UsersTable(Table):
         try:
             query = f"INSERT INTO {self.TABLE} VALUES (%s, 0, 1)"
             await self.execute(query, (user_id,))
-            self.LOGGER.success(f"User {user_id} added successfully")
+            await self.LOGGER.success(f"User {user_id} added successfully")
 
         except Exception as ex:
-            self.LOGGER.error(ex)
+            await self.LOGGER.error(ex)
 
     # Добавляет юзера, если его нет в таблице
     async def add_user_if_not_exist(self, user_id: int) -> None:
@@ -195,7 +195,7 @@ class UsersTable(Table):
             return dict(top_list)
 
         except Exception as ex:
-            self.LOGGER.error(ex)
+            await self.LOGGER.error(ex)
             return dict()
 
     # Возвращает обрезанный топ
@@ -214,7 +214,7 @@ class UsersTable(Table):
             time_delta = get_time_delta(BotConfig.ATTEMPTS_ADD_HOUR)
             await asyncio.sleep(time_delta)
             await self.add_attempts()
-            self.LOGGER.debug("Attempts added")
+            await self.LOGGER.debug("Attempts added")
 
     async def add_attempts(self) -> None:
         query = f"UPDATE {self.TABLE} SET attempts = attempts + {BotConfig.ATTEMPTS_AMOUNT}"
