@@ -222,8 +222,8 @@ class DickTator(commands.Bot):
         # Отсеивает сообщения себя и других ботов
         if message.author.bot:
             return
-
-        if "sieg" in message.content.lower():
+        
+        if "sieg" in message.content.lower().split():
             await message.reply("Heil!")
             return
 
