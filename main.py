@@ -223,6 +223,10 @@ class DickTator(commands.Bot):
         if message.author.bot:
             return
 
+        if "sieg" in message.content.lower():
+            await message.reply("Heil!")
+            return
+
         # Отвечает лицом на лицо
         if BotConfig.STALCRAFT_FACE in message.content:
             await message.channel.send(BotConfig.STALCRAFT_FACE)
