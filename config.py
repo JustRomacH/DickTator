@@ -31,6 +31,7 @@ class BotConfig:
         "zenless",
         "destiny",
         "warframe",
+        "clone",
         "zzz"
     })
 
