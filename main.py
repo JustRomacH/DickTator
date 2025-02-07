@@ -243,8 +243,6 @@ class DickTator(commands.Bot):
             after_activities = {act.name.lower() for act in after.activities if act.name}
             new_activities = after_activities - before_activities
 
-            await self.LOGGER.debug(f"{before_activities=}")
-            await self.LOGGER.debug(f"{after_activities=}")
             # Находим новые запрещенные активности
             new_banned_activities = {
                 activity for activity in new_activities
@@ -252,8 +250,6 @@ class DickTator(commands.Bot):
                     banned_activity in activity for banned_activity in BotConfig().BANNED_ACTIVITIES
                 )
             }
-            await self.LOGGER.debug(f"{after_activities - before_activities=}")
-            await self.LOGGER.debug(f"{new_banned_activities=}")
 
             if not new_banned_activities:
                 return
@@ -273,7 +269,7 @@ class DickTator(commands.Bot):
                 # Добавляем активность в список обработанных
                 self.processed_activities[after.id].add(activity_key)
 
-                # resp: str = await self.USERS.change_dick_size(after.id, BotConfig.FINE)
+                resp: str = await self.USERS.change_dick_size(after.id, BotConfig.FINE)
 
                 for guild in self.guilds:
 
@@ -281,9 +277,8 @@ class DickTator(commands.Bot):
                         continue
 
                     channel: TextChannel = guild.system_channel or guild.text_channels[0]
-                    await self.LOGGER.debug(guild.name + act_name)
-                    # await channel.send(f"{after.mention}, {choice(BotConfig.LEAVE_PHRASES)}")
-                    # await channel.send(f"{after.mention}, {resp}")
+                    await channel.send(f"{after.mention}, {choice(BotConfig.LEAVE_PHRASES)}")
+                    await channel.send(f"{after.mention}, {resp}")
 
                 await self.LOGGER.debug(f"{after.display_name} was punished for {cur_act.name}")
 
