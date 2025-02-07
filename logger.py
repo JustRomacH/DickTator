@@ -59,7 +59,7 @@ class Logger:
         await self.output(log, color)
 
     async def debug(self, message) -> None:
-        await self.log_message("~", "grey", message)
+        await self.log_message("~", "white", message)
 
     async def success(self, message) -> None:
         await self.log_message("+", "green", message)
