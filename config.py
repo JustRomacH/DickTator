@@ -31,8 +31,7 @@ class BotConfig:
         "league of legends",
         "zenless",
         "destiny",
-        "warframe",
-        "clone"
+        "warframe"
     )
 
     LEAVE_PHRASES: tuple[str] = (
