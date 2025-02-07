@@ -2,7 +2,7 @@ from os import getenv
 from pathlib import Path
 from dotenv import load_dotenv
 from utils import get_words_right_form
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 load_dotenv()
 
