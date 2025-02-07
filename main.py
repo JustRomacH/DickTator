@@ -242,12 +242,12 @@ class DickTator(commands.Bot):
             before_activities = {act.name.lower() for act in before.activities if act.name}
             after_activities = {act.name.lower() for act in after.activities if act.name}
 
-            await self.LOGGER.debug(before_activities)
-            await self.LOGGER.debug(after_activities)
+            await self.LOGGER.debug(f"{before_activities=}")
+            await self.LOGGER.debug(f"{after_activities=}")
             # Находим новые запрещенные активности
             new_banned_activities = (after_activities - before_activities) & BotConfig().BANNED_ACTIVITIES
-            await self.LOGGER.debug(after_activities - before_activities)
-            await self.LOGGER.debug(new_banned_activities)
+            await self.LOGGER.debug(f"{after_activities - before_activities=}")
+            await self.LOGGER.debug(f"{new_banned_activities=}")
 
             if not new_banned_activities:
                 return
