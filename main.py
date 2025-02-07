@@ -223,7 +223,7 @@ class DickTator(commands.Bot):
         if message.author.bot:
             return
 
-        if {"зиг", "sieg"} & set(message.content.lower().split()):
+        if {"зиг", "сиг", "sieg"} & set(message.content.lower().split()):
             await message.reply("Heil!")
             return
 
@@ -236,43 +236,44 @@ class DickTator(commands.Bot):
 
     async def on_presence_update(self, before: Member, after: Member) -> None:
         try:
-            # Инициализация обработанных активностей для пользователя
-            if after.id not in self.processed_activities:
-                self.processed_activities[after.id] = set()
+            self.processed_activities.setdefault(after.id, set())
 
-            for ban_act in BotConfig.BANNED_ACTIVITIES:
-                # Если до этого была запрещённая активность
-                if any(ban_act in prev_act.name.lower() for prev_act in before.activities):
+            # Получаем множества активностей до и после
+            before_activities = {act.name.lower() for act in before.activities if act.name}
+            after_activities = {act.name.lower() for act in after.activities if act.name}
+
+            # Находим новые запрещенные активности
+            new_banned_activities = (after_activities - before_activities) & BotConfig.BANNED_ACTIVITIES
+
+            if not new_banned_activities:
+                return
+
+            for cur_act in after.activities:
+                act_name = cur_act.name.lower()
+
+                if act_name not in new_banned_activities:
                     continue
 
-                for cur_act in after.activities:
-                    if not ban_act in cur_act.name.lower():
+                start_time = cur_act.timestamps.get("start")
+                activity_key = (act_name, start_time)
+
+                if activity_key in self.processed_activities[after.id]:
+                    continue
+
+                # Добавляем активность в список обработанных
+                self.processed_activities[after.id].add(activity_key)
+
+                resp: str = await self.USERS.change_dick_size(after.id, BotConfig.FINE)
+
+                for guild in self.guilds:
+                    if after not in guild.members:
                         continue
 
-                    start_time = cur_act.timestamps.get("start")
-                    activity_key = (cur_act.name.lower(), start_time)
+                    channel: TextChannel = guild.system_channel or guild.text_channels[0]
+                    await channel.send(f"{after.mention}, {choice(BotConfig.LEAVE_PHRASES)}")
+                    await channel.send(f"{after.mention}, {resp}")
 
-                    # Если активность уже обработана, пропускаем
-                    if activity_key in self.processed_activities[after.id]:
-                        continue
-
-                    # Добавляем активность в список обработанных
-                    self.processed_activities[after.id].add(activity_key)
-
-                    await self.USERS.add_user_if_not_exist(after.id)
-                    resp: str = await self.USERS.change_dick_size(after.id, BotConfig.FINE)
-
-                    # Рассылаем сообщения по всем серверам
-                    for guild in self.guilds:
-                        if not after in guild.members:
-                            continue
-                        channel: TextChannel = guild.system_channel or guild.text_channels[0]
-                        await channel.send(f"{after.mention}, {choice(BotConfig.LEAVE_PHRASES)}")
-                        await channel.send(f"{after.mention}, {resp}")
-
-                    await self.LOGGER.debug(
-                        f"{after.display_name} was punished for {cur_act.name}"
-                    )
+                await self.LOGGER.debug(f"{after.display_name} was punished for {cur_act.name}")
 
         except Exception as ex:
             await self.LOGGER.error(ex)
@@ -368,7 +369,7 @@ class DickTator(commands.Bot):
 
 
 async def main() -> None:
-    logger = Logger(output=False)
+    logger = Logger(output=True)
 
     try:
         await logger.debug("Bot is starting...")
