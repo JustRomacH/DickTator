@@ -376,7 +376,7 @@ class DickTator(commands.Bot):
 
 
 async def main() -> None:
-    logger = Logger(output=True)
+    logger = Logger(output=False)
 
     try:
         await logger.debug("Bot is starting...")
