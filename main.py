@@ -271,7 +271,7 @@ class DickTator(commands.Bot):
                         continue
 
                     channel: TextChannel = guild.system_channel or guild.text_channels[0]
-                    await self.LOGGER.debug(guild.name, channel, act_name)
+                    await self.LOGGER.debug(guild.name + channel + act_name)
                     # await channel.send(f"{after.mention}, {choice(BotConfig.LEAVE_PHRASES)}")
                     # await channel.send(f"{after.mention}, {resp}")
 
