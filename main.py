@@ -263,7 +263,7 @@ class DickTator(commands.Bot):
                 # Добавляем активность в список обработанных
                 self.processed_activities[after.id].add(activity_key)
 
-                resp: str = await self.USERS.change_dick_size(after.id, BotConfig.FINE)
+                # resp: str = await self.USERS.change_dick_size(after.id, BotConfig.FINE)
 
                 for guild in self.guilds:
 
@@ -271,8 +271,9 @@ class DickTator(commands.Bot):
                         continue
 
                     channel: TextChannel = guild.system_channel or guild.text_channels[0]
-                    await channel.send(f"{after.mention}, {choice(BotConfig.LEAVE_PHRASES)}")
-                    await channel.send(f"{after.mention}, {resp}")
+                    print(guild.name, channel, act_name)
+                    # await channel.send(f"{after.mention}, {choice(BotConfig.LEAVE_PHRASES)}")
+                    # await channel.send(f"{after.mention}, {resp}")
 
                 await self.LOGGER.debug(f"{after.display_name} was punished for {cur_act.name}")
 
