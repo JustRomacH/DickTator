@@ -23,17 +23,17 @@ class BotConfig:
     US_DEBT_GIF: str = "https://media1.tenor.com/m/inHdJJ90TKEAAAAd/%D0%B4%D0%BE%D0%BB%D0%B3-%D1%81%D1%88%D0%B0.gif"
     STALCRAFT_FACE: str = "https://tenor.com/view/stalcraft-%D1%81%D0%BD%D1%8E%D1%81-minecraft-gif-19986730"
 
-    BANNED_ACTIVITIES: set[str] = field(default_factory=lambda: {
+    BANNED_ACTIVITIES: tuple[str] = (
         "dota",
         "unturned",
         "genshin",
         "honkai",
+        "league of legends",
         "zenless",
         "destiny",
         "warframe",
-        "clone",
-        "zzz"
-    })
+        "clone"
+    )
 
     LEAVE_PHRASES: tuple[str] = (
         "ливай с позором",
