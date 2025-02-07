@@ -243,7 +243,7 @@ class DickTator(commands.Bot):
             after_activities = {act.name.lower() for act in after.activities if act.name}
 
             # Находим новые запрещенные активности
-            new_banned_activities = (after_activities - before_activities) & BotConfig.BANNED_ACTIVITIES
+            new_banned_activities = (after_activities - before_activities) & BotConfig().BANNED_ACTIVITIES
 
             if not new_banned_activities:
                 return
@@ -266,6 +266,7 @@ class DickTator(commands.Bot):
                 resp: str = await self.USERS.change_dick_size(after.id, BotConfig.FINE)
 
                 for guild in self.guilds:
+
                     if after not in guild.members:
                         continue
 
