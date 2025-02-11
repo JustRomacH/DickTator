@@ -130,7 +130,7 @@ class DickTator(commands.Bot):
             if not global_top:
                 await ctx.channel.send("Похоже топ пустой...")
 
-            title, users_top = self.get_global_top_resp(global_top)
+            title, users_top = await self.get_global_top_resp(global_top)
             embed = Embed(
                 title=title,
                 description=users_top,
@@ -320,7 +320,7 @@ class DickTator(commands.Bot):
 
         return title, top
 
-    def get_global_top_resp(self, users_top: dict[int, int]) -> tuple[str, str]:
+    async def get_global_top_resp(self, users_top: dict[int, int]) -> tuple[str, str]:
         if len(users_top.keys()) < BotConfig.MAX_USERS_IN_TOP:
             title: str = f"Топ писюнов:"
         else:
@@ -332,15 +332,16 @@ class DickTator(commands.Bot):
             try:
                 user: User = self.get_user(user_id)
 
-                if not user:
-                    self.USERS.remove_string("id", user_id)
-
                 user_name: str = user.display_name
                 user_size: int = users_top.get(user_id)
                 top += f"\n{i + 1}. **{user_name} — {user_size} см**"
 
+            except AttributeError as ex:
+                await self.LOGGER.error(ex)
+                await self.USERS.remove_string("id", user_id)
+
             except Exception as ex:
-                self.LOGGER.error(ex)
+                await self.LOGGER.error(ex)
 
         return title, top
 
