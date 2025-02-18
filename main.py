@@ -1,3 +1,4 @@
+import re
 import asyncio
 import requests
 from utils import *
@@ -223,7 +224,10 @@ class DickTator(commands.Bot):
         if message.author.bot:
             return
 
-        if {"зиг", "сиг", "sieg"} & set(message.content.lower().split()):
+        if any(
+                re.search(rf"\b{word}\b", message.content.split('http')[0], re.IGNORECASE)
+                for word in ("sieg", "зиг", "сиг")
+        ):
             await message.reply("Heil!")
             return
 
