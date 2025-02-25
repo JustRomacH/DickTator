@@ -12,7 +12,6 @@ load_dotenv()
 class BotConfig:
     PREFIX: str = "!"
     TOKEN: str = getenv("TOKEN")
-    EMBED_COLOR: hex = 0x88c8d1
     FINE: int = -10
     ATTEMPTS_ADD_HOUR: int = 17
     ATTEMPTS_AMOUNT: int = 1
