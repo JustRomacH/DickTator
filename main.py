@@ -298,7 +298,7 @@ class DickTator(commands.Bot):
 
                 embed = Embed(
                     description=bold(
-                        f"{after.mention}, {choice(BotConfig.LEAVE_PHRASES)}\n{resp.capitalize()}"
+                        f"{after.mention}, {choice(BotConfig.LEAVE_PHRASES)}\n{resp}"
                     ),
                     color=BotConfig.RED_COLOR
                 )
