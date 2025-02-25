@@ -66,7 +66,7 @@ class DickTator(commands.Bot):
             embed = Embed(
                 title="Общая информация:",
                 description=BotConfig.HELP_RESPONSE,
-                color=ctx.guild.get_member(self.user.id).top_role.color,
+                color=ctx.me.color
             )
             embed.add_field(
                 name="Команды:",
@@ -90,6 +90,7 @@ class DickTator(commands.Bot):
             await ctx.channel.send(BotConfig.STALCRAFT_FACE)
 
         # Изменяет размер писюна на рандомное значение
+        @commands.cooldown(1, 1, commands.BucketType.user)
         @self.command(
             aliases=["d", "penis", "cock", "4len"],
             help="Изменяет размер писюна"
@@ -98,7 +99,11 @@ class DickTator(commands.Bot):
             user_id: int = ctx.author.id
             mention: str = ctx.author.mention
             resp: str = await self.USERS.dick_random(user_id)
-            await ctx.channel.send(f"{mention}, {resp}")
+            embed = Embed(
+                description=bold(f"{mention}, {resp}"),
+                color=ctx.me.color
+            )
+            await ctx.channel.send(embed=embed)
 
         # Выводит топ писюнов сервера
         @self.command(
@@ -116,7 +121,7 @@ class DickTator(commands.Bot):
             embed = Embed(
                 title=title,
                 description=users_top,
-                color=ctx.guild.get_member(self.user.id).top_role.color
+                color=ctx.me.color
             )
             await ctx.channel.send(embed=embed)
 
@@ -135,7 +140,7 @@ class DickTator(commands.Bot):
             embed = Embed(
                 title=title,
                 description=users_top,
-                color=ctx.guild.get_member(self.user.id).top_role.color
+                color=ctx.me.color
             )
             await ctx.channel.send(embed=embed)
 
@@ -147,8 +152,12 @@ class DickTator(commands.Bot):
         async def place(ctx: commands.Context) -> None:
             members: Sequence[Member] = ctx.guild.members
             local_top = await self.get_local_top(members)
-            resp = self.get_place_resp(ctx, local_top)
-            await ctx.channel.send(resp)
+            resp: str = self.get_pos_resp(ctx, local_top)
+            embed = Embed(
+                description=big(resp),
+                color=ctx.me.color
+            )
+            await ctx.channel.send(embed=embed)
 
         # Выводит место в глобальном топе
         @self.command(
@@ -157,8 +166,12 @@ class DickTator(commands.Bot):
         )
         async def gplace(ctx: commands.Context) -> None:
             global_top = await self.USERS.get_global_top()
-            resp = self.get_place_resp(ctx, global_top, True)
-            await ctx.channel.send(resp)
+            resp: str = self.get_pos_resp(ctx, global_top, True)
+            embed = Embed(
+                description=big(resp),
+                color=ctx.me.color
+            )
+            await ctx.channel.send(embed=embed)
 
         # Выводит количество оставшихся попыток
         @self.command(
@@ -169,8 +182,12 @@ class DickTator(commands.Bot):
             try:
                 user_id: int = ctx.author.id
                 mention: str = ctx.author.mention
-                attempts_resp: str = await self.USERS.get_attempts_resp(user_id)
-                await ctx.channel.send(f"{mention}, {attempts_resp.lower()}")
+                resp: str = await self.USERS.get_attempts_resp(user_id)
+                embed = Embed(
+                    description=big(f"{mention}, {resp.lower()}"),
+                    color=ctx.me.color
+                )
+                await ctx.channel.send(embed=embed)
 
             except Exception as ex:
                 await self.LOGGER.error(ex)
@@ -185,8 +202,12 @@ class DickTator(commands.Bot):
             try:
                 user_id: int = ctx.author.id
                 mention: str = ctx.author.mention
-                dick_size_resp: str = await self.USERS.get_dick_size_resp(user_id)
-                await ctx.channel.send(f"{mention}, {dick_size_resp.lower()}")
+                resp: str = await self.USERS.get_dick_size_resp(user_id)
+                embed = Embed(
+                    description=big(f"{mention}, {resp.lower()}"),
+                    color=ctx.me.color
+                )
+                await ctx.channel.send(embed=embed)
 
             except Exception as ex:
                 await ctx.channel.send("Что-то пошло не так...")
@@ -204,7 +225,7 @@ class DickTator(commands.Bot):
                 el: Tag = html.find("span", {"class": "debt-number"})
                 debt: str = el.text
                 await ctx.channel.send(
-                    f"Госдолг США составляет ${debt}"
+                    bold(f"Госдолг США составляет ${debt}")
                 )
                 await self.LOGGER.debug("Got US Government Debt")
                 await ctx.channel.send(BotConfig.US_DEBT_GIF)
@@ -275,14 +296,20 @@ class DickTator(commands.Bot):
 
                 resp: str = await self.USERS.change_dick_size(after.id, BotConfig.FINE)
 
+                embed = Embed(
+                    description=bold(
+                        f"{after.mention}, {choice(BotConfig.LEAVE_PHRASES)}\n{resp.capitalize()}"
+                    ),
+                    color=BotConfig.RED_COLOR
+                )
+
                 for guild in self.guilds:
 
                     if after not in guild.members:
                         continue
 
                     channel: TextChannel = guild.system_channel or guild.text_channels[0]
-                    await channel.send(f"{after.mention}, {choice(BotConfig.LEAVE_PHRASES)}")
-                    await channel.send(f"{after.mention}, {resp}")
+                    await channel.send(embed=embed)
 
                 await self.LOGGER.debug(f"{after.display_name} was punished for {cur_act.name}")
 
@@ -290,16 +317,20 @@ class DickTator(commands.Bot):
             await self.LOGGER.error(ex)
 
     # Отлавливает ошибки команд
-    async def on_command_error(self, context: Context, exception: errors.CommandError) -> None:
-        if isinstance(exception, errors.CommandNotFound):
+    async def on_command_error(self, ctx: Context, ex: errors.CommandError) -> None:
+        if isinstance(ex, errors.CommandNotFound):
             await self.LOGGER.warning(
-                f"Unknown command used by {context.author}: {context.message.content}"
+                f"Unknown command used by {ctx.author}: {ctx.message.content}"
             )
-            await context.channel.send(
-                f"{context.author.mention}, такой команды не существует..."
+            await ctx.channel.send(
+                f"{ctx.author.mention}, такой команды не существует..."
             )
+
+        elif isinstance(ex, commands.CommandOnCooldown):
+            await ctx.send(f"{ctx.author.mention}, подожди ещё {ex.retry_after:.1f} сек")
+
         else:
-            await self.LOGGER.error(exception)
+            await self.LOGGER.error(ex)
 
     # ДРУГИЕ ФУНКЦИИ
 
@@ -350,18 +381,21 @@ class DickTator(commands.Bot):
         return title, top
 
     # Возвращает текст с местом в топе
-    def get_place_resp(
+    def get_pos_resp(
             self, ctx: Context, users_top: dict[int, int], is_global: bool = False
     ) -> str:
         try:
             user_id: int = ctx.author.id
             mention: str = ctx.author.mention
-            place_in_top: int = self.USERS.get_place_in_top(user_id, users_top)
+            pos: int = self.USERS.get_pos_in_top(user_id, users_top)
+
+            if pos == -1:
+                return f"{mention}, тебя пока нет в топе..."
 
             if is_global:
-                return f"{mention}, ты занимаешь {place_in_top} место в глобальном топе"
+                return f"{mention}, ты занимаешь {pos} место в глобальном топе"
             else:
-                return f"{mention}, ты занимаешь {place_in_top} место в топе сервера"
+                return f"{mention}, ты занимаешь {pos} место в топе сервера"
 
         except Exception as ex:
             self.LOGGER.error(ex)
