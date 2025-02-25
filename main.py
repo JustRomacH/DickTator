@@ -66,7 +66,7 @@ class DickTator(commands.Bot):
             embed = Embed(
                 title="Общая информация:",
                 description=BotConfig.HELP_RESPONSE,
-                color=BotConfig.EMBED_COLOR
+                color=ctx.guild.get_member(self.user.id).top_role.color,
             )
             embed.add_field(
                 name="Команды:",
@@ -116,7 +116,7 @@ class DickTator(commands.Bot):
             embed = Embed(
                 title=title,
                 description=users_top,
-                color=BotConfig.EMBED_COLOR
+                color=ctx.guild.get_member(self.user.id).top_role.color
             )
             await ctx.channel.send(embed=embed)
 
@@ -135,7 +135,7 @@ class DickTator(commands.Bot):
             embed = Embed(
                 title=title,
                 description=users_top,
-                color=BotConfig.EMBED_COLOR
+                color=ctx.guild.get_member(self.user.id).top_role.color
             )
             await ctx.channel.send(embed=embed)
 
@@ -381,7 +381,7 @@ class DickTator(commands.Bot):
 
 
 async def main() -> None:
-    logger = Logger(output=False)
+    logger = Logger(output=True)
 
     try:
         await logger.debug("Bot is starting...")
