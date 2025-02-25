@@ -142,19 +142,18 @@ class UsersTable(Table):
     ) -> str:
         user_size: int = await self.get_dick_size(user_id)
         global_top = await self.get_global_top()
-        top_place: int = self.get_place_in_top(user_id, global_top)
+        pos: int = self.get_pos_in_top(user_id, global_top)
         attempts_resp: str = await self.get_attempts_resp(user_id)
 
         if is_atts_were:  # Если до вызова функции у юзера оставались попытки
             return (f"{self.get_size_change_resp(delta)}"
                     f"\nТеперь он равен {user_size} см"
-                    f"\nТы занимаешь {top_place} место в глобальном топе"
+                    f"\nТы занимаешь {pos} место в глобальном топе"
                     "\n" + attempts_resp)
 
-        else:
-            return (f"{attempts_resp.lower()}"
-                    f"\nСейчас твой писюн равен {user_size} см"
-                    f"\nТы занимаешь {top_place} место в глобальном топе")
+        return (f"{attempts_resp.lower()}"
+                f"\nСейчас твой писюн равен {user_size} см"
+                f"\nТы занимаешь {pos} место в глобальном топе")
 
     # КОМАНДЫ БОТА
 
@@ -205,7 +204,7 @@ class UsersTable(Table):
 
     # Возвращает позицию юзера в общем топе
     @staticmethod
-    def get_place_in_top(user_id: int, top: dict[int, int]) -> int:
+    def get_pos_in_top(user_id: int, top: dict[int, int]) -> int:
         return list(top.keys()).index(user_id) + 1 if user_id in top else -1
 
     # Добавляет 1 попытку всем юзерам каждый день
