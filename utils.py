@@ -2,6 +2,15 @@ from datetime import timezone
 from datetime import datetime, timedelta
 
 
+def big(text: str) -> str:
+    return "\n".join(f"### {line}" for line in text.split("\n"))
+
+
+# Делает текст жирным
+def bold(text: str) -> str:
+    return f"**{text}**"
+
+
 # Обрезает словарь
 def slice_dict(full_dict: dict, gap: int) -> dict:
     items = full_dict.items()
