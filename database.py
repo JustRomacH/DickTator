@@ -151,7 +151,7 @@ class UsersTable(Table):
                     f"\nТы занимаешь {pos} место в глобальном топе"
                     "\n" + attempts_resp)
 
-        return (f"{attempts_resp.lower()}"
+        return (f"{attempts_resp}"
                 f"\nСейчас твой писюн равен {user_size} см"
                 f"\nТы занимаешь {pos} место в глобальном топе")
 
