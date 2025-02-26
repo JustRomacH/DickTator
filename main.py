@@ -100,7 +100,7 @@ class DickTator(commands.Bot):
             mention: str = ctx.author.mention
             resp: str = await self.USERS.dick_random(user_id)
             embed = Embed(
-                description=bold(f"{mention}, {resp.lower()}"),
+                description=bold(f"{mention}, {resp}"),
                 color=ctx.me.color
             )
             await ctx.channel.send(embed=embed)
