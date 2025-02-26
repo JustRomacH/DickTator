@@ -2,6 +2,12 @@ from datetime import timezone
 from datetime import datetime, timedelta
 
 
+# Делает
+def lower_first(text: str) -> str:
+    return text[0].lower() + text[1:] if text else text
+
+
+# Делает текст заголовком
 def big(text: str) -> str:
     return "\n".join(f"### {line}" for line in text.split("\n"))
 
