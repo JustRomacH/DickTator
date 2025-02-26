@@ -223,11 +223,11 @@ class UsersTable(Table):
     @staticmethod
     def get_size_change_resp(delta: int) -> str:
         if delta > 0:
-            return f"твой писюн вырос на {delta} см"
+            return f"Твой писюн вырос на {delta} см"
         elif delta < 0:
-            return f"твой писюн уменьшился на {abs(delta)} см"
+            return f"Твой писюн уменьшился на {abs(delta)} см"
         else:
-            return f"твой писюн не изменился"
+            return f"Твой писюн не изменился"
 
 
 async def main():
