@@ -1,6 +1,7 @@
 import re
 import asyncio
-import requests
+import aiohttp
+import discord
 from utils import *
 from config import *
 from logger import Logger
@@ -80,27 +81,31 @@ class DickTator(commands.Bot):
 
         await self.LOGGER.success("Commands added")
 
-        # Скидывает лицо из Stalcraft
-        @self.command(
-            aliases=["sc", "face"],
-            help="Скидывает Gif с лицом из Stalcraft"
-        )
-        async def stalcraft(ctx: commands.Context) -> None:
-            await ctx.message.delete()
-            await ctx.channel.send(BotConfig.STALCRAFT_FACE)
-
         # Изменяет размер писюна на рандомное значение
         @commands.cooldown(1, 1, commands.BucketType.user)
         @self.command(
             aliases=["d", "penis", "cock", "4len"],
-            help="Изменяет размер писюна"
+            help="Изменяет размер писюна, используя указанное количество попыток"
         )
-        async def dick(ctx: commands.Context) -> None:
-            user_id: int = ctx.author.id
-            mention: str = ctx.author.mention
-            resp: str = await self.USERS.dick_random(user_id)
+        async def dick(ctx: commands.Context, atts: int = 1) -> None:
+            resp: str = await self.USERS.dick_random(ctx.author.id, atts)
             embed = Embed(
-                description=bold(f"{mention}, {lower_first(resp)}"),
+                description=bold(f"{ctx.author.mention}, {lower_first(resp)}"),
+                color=ctx.me.color
+            )
+            await ctx.channel.send(embed=embed)
+
+        # Изменяет размер писюна на рандомное значение
+        @commands.cooldown(1, 1, commands.BucketType.user)
+        @self.command(
+            aliases=["da", "df", "allin", "all", "full"],
+            help="Использует все попытки для !dick"
+        )
+        async def dickall(ctx: commands.Context) -> None:
+            atts: int = await self.USERS.get_attempts(ctx.author.id)
+            resp: str = await self.USERS.dick_random(ctx.author.id, atts)
+            embed = Embed(
+                description=bold(f"{ctx.author.mention}, {lower_first(resp)}"),
                 color=ctx.me.color
             )
             await ctx.channel.send(embed=embed)
@@ -146,10 +151,10 @@ class DickTator(commands.Bot):
 
         # Выводит место в топе сервера
         @self.command(
-            aliases=["p", "n", "num", "number"],
+            aliases=["p", "n", "num", "number", "spot", "place"],
             help="Выводит место в топе сервера"
         )
-        async def place(ctx: commands.Context) -> None:
+        async def pos(ctx: commands.Context) -> None:
             members: Sequence[Member] = ctx.guild.members
             local_top = await self.get_local_top(members)
             resp: str = self.get_pos_resp(ctx, local_top)
@@ -161,10 +166,10 @@ class DickTator(commands.Bot):
 
         # Выводит место в глобальном топе
         @self.command(
-            aliases=["gp", "gn", "gnum", "gnumber"],
+            aliases=["gp", "gn", "gnum", "gnumber", "gspot", "gplace"],
             help="Выводит место в глобальном топе"
         )
-        async def gplace(ctx: commands.Context) -> None:
+        async def gpos(ctx: commands.Context) -> None:
             global_top = await self.USERS.get_global_top()
             resp: str = self.get_pos_resp(ctx, global_top, True)
             embed = Embed(
@@ -220,15 +225,24 @@ class DickTator(commands.Bot):
         )
         async def gosdolg(ctx: commands.Context) -> None:
             try:
-                req: bytes = requests.get(BotConfig.US_DEBT_URL).content
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(BotConfig.US_DEBT_URL) as resp:
+                        req = await resp.read()
+
                 html: BS = BS(req, "html.parser")
                 el: Tag = html.find("span", {"class": "debt-number"})
                 debt: str = el.text
-                await ctx.channel.send(
-                    bold(f"Госдолг США составляет ${debt}")
-                )
                 await self.LOGGER.debug("Got US Government Debt")
-                await ctx.channel.send(BotConfig.US_DEBT_GIF)
+                
+                embed = Embed(
+                    title=f"Госдолг США составляет ${debt}",
+                    color=ctx.me.color
+                )
+                with open("static/us-debt.gif", "rb") as f:
+                    file = discord.File(f, filename="us-debt.gif")
+                    embed.set_image(url="attachment://us-debt.gif")
+
+                await ctx.channel.send(embed=embed, file=file)
 
             except AttributeError as ex:
                 await self.LOGGER.warning(ex)
@@ -250,11 +264,6 @@ class DickTator(commands.Bot):
                 for word in ("sieg", "зиг", "сиг")
         ):
             await message.reply("Heil!")
-            return
-
-        # Отвечает лицом на лицо
-        if BotConfig.STALCRAFT_FACE in message.content:
-            await message.channel.send(BotConfig.STALCRAFT_FACE)
             return
 
         await self.process_commands(message)
@@ -328,6 +337,11 @@ class DickTator(commands.Bot):
 
         elif isinstance(ex, commands.CommandOnCooldown):
             await ctx.send(f"{ctx.author.mention}, подожди ещё {ex.retry_after:.1f} сек")
+
+        elif isinstance(ex, errors.BadArgument):
+            await ctx.channel.send(
+                f"{ctx.author.mention}, ты ввёл что-то не то..."
+            )
 
         else:
             await self.LOGGER.error(ex)
@@ -415,7 +429,7 @@ class DickTator(commands.Bot):
 
 
 async def main() -> None:
-    logger = Logger(output=False)
+    logger = Logger(output=True)
 
     try:
         await logger.debug("Bot is starting...")
