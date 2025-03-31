@@ -3,7 +3,7 @@ import aiomysql
 from utils import *
 from config import *
 from logger import Logger
-from random import randint
+from numpy.random import randint
 from typing import Optional, Tuple, List, Any
 
 
@@ -127,31 +127,33 @@ class UsersTable(Table):
         return await self.get_dick_resp(user_id, delta=delta)
 
     # Изменяет размер писюна на случайное число см
-    async def dick_random(self, user_id: int) -> str:
+    async def dick_random(self, user_id: int, atts_amount: int) -> str:
         await self.add_user_if_not_exist(user_id)
         attempts = await self.get_attempts(user_id)
-        if attempts > 0:
-            await self.update_value("attempts", attempts - 1, "id", user_id)
-            delta = randint(BotConfig.MIN_DICK_DELTA, BotConfig.MAX_DICK_DELTA)
+
+        if attempts >= atts_amount and attempts > 0:
+            await self.update_value("attempts", attempts - atts_amount, "id", user_id)
+            delta = randint(BotConfig.MIN_DICK_DELTA, BotConfig.MAX_DICK_DELTA + 1, atts_amount).sum()
             return await self.change_dick_size(user_id, delta)
-        return await self.get_dick_resp(user_id, is_atts_were=False)
+
+        return await self.get_dick_resp(user_id, enough_atts=False)
 
     # Возвращает текст, которым ответит бот
     async def get_dick_resp(
-            self, user_id: int, delta: int = 0, is_atts_were: bool = True
+            self, user_id: int, delta: int = 0, enough_atts: bool = True
     ) -> str:
         user_size: int = await self.get_dick_size(user_id)
         global_top = await self.get_global_top()
         pos: int = self.get_pos_in_top(user_id, global_top)
         attempts_resp: str = await self.get_attempts_resp(user_id)
 
-        if is_atts_were:  # Если до вызова функции у юзера оставались попытки
+        if enough_atts:  # Если до вызова функции у юзера достаточно попыток
             return (f"{self.get_size_change_resp(delta)}"
                     f"\nТеперь он равен {user_size} см"
                     f"\nТы занимаешь {pos} место в глобальном топе"
                     "\n" + attempts_resp)
 
-        return (f"{lower_first(attempts_resp)}"
+        return (f"У тебя недостаточно попыток"
                 f"\nСейчас твой писюн равен {user_size} см"
                 f"\nТы занимаешь {pos} место в глобальном топе")
 
@@ -159,7 +161,7 @@ class UsersTable(Table):
 
     # Возвращает текст с количеством попыток
     async def get_attempts_resp(self, user_id: int) -> str:
-        attempts: int = await self.get_attempts(user_id)
+        attempts = await self.get_attempts(user_id)
         left_form, attempts_form = get_words_right_form(attempts)
 
         match attempts:
@@ -171,7 +173,7 @@ class UsersTable(Table):
     # Возвращает текст с размером писюна
     async def get_dick_size_resp(self, user_id: int) -> str:
         size: int = await self.get_dick_size(user_id)
-        return f"Сейчас твой писюн имеет размер {size} см"
+        return f"Сейчас размер твоего писюна составляет {size} см"
 
     # ДРУГИЕ ФУНКЦИИ
 
@@ -212,9 +214,9 @@ class UsersTable(Table):
         while True:
             time_delta = get_time_delta(BotConfig.ATTEMPTS_ADD_HOUR)
             await asyncio.sleep(time_delta)
-            await self.add_attempts()
+            await self.add_attempts_everyone()
 
-    async def add_attempts(self) -> None:
+    async def add_attempts_everyone(self) -> None:
         query = f"UPDATE {self.TABLE} SET attempts = attempts + {BotConfig.ATTEMPTS_AMOUNT}"
         await self.execute(query)
         await self.LOGGER.debug("Attempts added")
@@ -238,7 +240,7 @@ async def main():
         DBConfig.DATABASE
     )
     await users.connect()
-    await users.add_attempts()
+    await users.add_attempts_everyone()
 
 
 if __name__ == "__main__":
