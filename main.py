@@ -233,7 +233,7 @@ class DickTator(commands.Bot):
                 el: Tag = html.find("span", {"class": "debt-number"})
                 debt: str = el.text
                 await self.LOGGER.debug("Got US Government Debt")
-                
+
                 embed = Embed(
                     title=f"Госдолг США составляет ${debt}",
                     color=ctx.me.color
@@ -429,7 +429,7 @@ class DickTator(commands.Bot):
 
 
 async def main() -> None:
-    logger = Logger(output=True)
+    logger = Logger(output=False)
 
     try:
         await logger.debug("Bot is starting...")
