@@ -32,12 +32,20 @@ class DickTator(commands.Bot):
             DBConfig.DATABASE,
         )
 
+    async def add_all_users(self):
+        # Получаем список всех серверов, на которых находится бот
+        for guild in self.guilds:
+            async for member in guild.fetch_members():
+                if not member.bot:
+                    await self.USERS.add_user_if_not_exist(member.id)
+
     # Срабатывает при запуске бота
     async def on_ready(self):
         await self.USERS.connect()
         await self.add_commands()
         await self.add_funcs_info()
         await self.LOGGER.success("Bot started")
+        await self.add_all_users()
         await self.USERS.add_attempts_coroutine()
 
     # Добавляет информацию о функциях в HELP_RESPONSE в config
