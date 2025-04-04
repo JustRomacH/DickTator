@@ -1,6 +1,8 @@
+import os
 import inspect
 import asyncio
 import aiofiles
+import contextlib
 from utils import *
 from config import *
 from termcolor import cprint
@@ -24,6 +26,9 @@ class Logger:
         self.filename = LoggerConfig.FILENAME
         self.filemode = LoggerConfig.FILEMODE
         self.lock = asyncio.Lock()
+
+        with contextlib.suppress(FileNotFoundError):
+            os.remove(self.filename)
 
     def get_caller(self):
         try:
